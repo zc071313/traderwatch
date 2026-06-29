@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>交易员曝光平台 - TraderWatch</title>
+<title>交易员共创部落 - TraderWatch</title>
 <style>
 :root {
   --bg-primary: #0d1117;
@@ -60,11 +60,12 @@ body {
 }
 
 .header-inner {
-  max-width: 70%;
-  margin: 0;
+  max-width: 800px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 20px;
 }
 
 .logo {
@@ -163,8 +164,8 @@ body {
 
 /* Main */
 .main {
-  max-width: 70%;
-  margin: 0;
+  max-width: 800px;
+  margin: 0 auto;
   padding: 16px;
 }
 
@@ -1237,8 +1238,8 @@ body {
 /* ==================== PLATFORM PAGE ==================== */
 .platform-page {
   display: none;
-  max-width: 70%;
-  margin: 0;
+  max-width: 800px;
+  margin: 0 auto;
   padding: 16px 16px 80px;
 }
 
@@ -1448,8 +1449,8 @@ body {
 /* ==================== DOWNLOAD CARDS (EA/指标/软件) ==================== */
 .download-page {
   display: none;
-  max-width: 70%;
-  margin: 0;
+  max-width: 800px;
+  margin: 0 auto;
   padding: 16px 16px 80px;
 }
 
@@ -1683,35 +1684,96 @@ body {
   word-break: break-word;
 }
 
-/* ==================== K-Line Trainer Sidebar ==================== */
-.kline-sidebar {
-  position: fixed;
-  top: 56px;
-  right: 0;
-  width: 30%;
-  bottom: 56px;
-  z-index: 99;
-  pointer-events: auto;
-}
-.kline-sidebar iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  display: block;
-  background: var(--bg-secondary);
+/* ==================== Header Actions ==================== */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-/* Mobile: hide sidebar, restore full width */
+.btn-kline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-kline:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ==================== K-Line Expand ==================== */
+.kline-expand {
+  display: none;
+  max-width: 800px;
+  margin: 0 auto 0 auto;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+.kline-expand-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+.kline-expand-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.kline-expand-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.kline-expand-close:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-primary);
+}
+.kline-expand iframe {
+  width: 100%;
+  height: calc(100vh - 100px);
+  border: none;
+  display: block;
+}
+
+/* Mobile responsive */
 @media (max-width: 768px) {
-  .kline-sidebar {
-    display: none;
-  }
   .header-inner,
   .main,
   .platform-page,
-  .download-page {
+  .download-page,
+  .kline-expand {
     max-width: 100%;
-    margin: 0;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 }
 
@@ -1726,19 +1788,29 @@ body {
       <div class="logo-icon">TW</div>
       <div class="logo-text">
         <h1>TraderWatch</h1>
-        <span>交易员曝光平台</span>
+        <span>交易员共创部落</span>
       </div>
     </div>
+    <div class="header-actions">
       <button class="btn btn-primary" onclick="openPublishModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         发布曝光
       </button>
+      <button class="btn btn-kline" onclick="openKlineExpand()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        K线训练大师
+      </button>
+    </div>
   </div>
 </header>
 
-<!-- K-Line Trainer Sidebar -->
-<div class="kline-sidebar">
-  <iframe src="https://zc071313.github.io/k-line-trainer/" title="K线训练器"></iframe>
+<!-- K-Line Expand Area -->
+<div class="kline-expand" id="klineExpand">
+  <div class="kline-expand-bar">
+    <span class="kline-expand-title">K线训练大师</span>
+    <button class="kline-expand-close" onclick="closeKlineExpand()" title="关闭">✕</button>
+  </div>
+  <iframe id="klineExpandIframe" src="" title="K线训练器" loading="lazy"></iframe>
 </div>
 
 <!-- Main Content -->
@@ -3936,6 +4008,32 @@ function deleteSuggestion(id) {
     console.error('[deleteSuggestion] 执行出错:', e);
     showToast('删除失败，请重试');
   }
+}
+
+// ==================== K-LINE EXPAND ====================
+function openKlineExpand() {
+  const area = document.getElementById('klineExpand');
+  const iframe = document.getElementById('klineExpandIframe');
+  area.style.display = 'block';
+  if (!iframe.src || iframe.src === window.location.href || iframe.src.endsWith('/')) {
+    iframe.src = 'https://zc071313.github.io/k-line-trainer/';
+  }
+  // Fullscreen mode: hide all page content below header
+  var ids = ['statsBar', 'filterTags', 'postList', 'bottomNav'];
+  ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
+  var classes = ['.search-bar', '.suggestion-link-wrap'];
+  classes.forEach(function(sel) { var el = document.querySelector(sel); if (el) el.style.display = 'none'; });
+  // Scroll to expand area
+  setTimeout(function() { area.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
+}
+
+function closeKlineExpand() {
+  document.getElementById('klineExpand').style.display = 'none';
+  // Restore all hidden elements
+  var ids = ['statsBar', 'filterTags', 'postList', 'bottomNav'];
+  ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = ''; });
+  var classes = ['.search-bar', '.suggestion-link-wrap'];
+  classes.forEach(function(sel) { var el = document.querySelector(sel); if (el) el.style.display = ''; });
 }
 
 // ==================== INIT ====================
