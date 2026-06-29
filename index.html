@@ -1740,9 +1740,9 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid var(--border);
+  border: 1px solid var(--red);
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--red);
   font-size: 0.85rem;
   cursor: pointer;
   display: flex;
@@ -1751,8 +1751,8 @@ body {
   transition: background 0.15s, color 0.15s;
 }
 .kline-expand-close:hover {
-  background: rgba(255,255,255,0.1);
-  color: var(--text-primary);
+  background: rgba(231,76,60,0.2);
+  color: #fff;
 }
 .kline-expand iframe {
   width: 100%;
@@ -3058,12 +3058,28 @@ function switchPage(page) {
 const PLATFORM_STORAGE_KEY = 'traderwatch_platforms';
 const CRYPTO_PLATFORM_STORAGE_KEY = 'traderwatch_crypto_platforms';
 
+const FOREX_PLATFORM_DEFAULTS = [
+  { id: -11, name: 'exness', url: 'https://one.exnessonelink.com/a/zgxgcfe9rr' },
+  { id: -12, name: 'STAR星迈', url: 'https://www.startraderapac.com/scn/live-account/?affid=MjQzODY4MDU=&ibpRebateCode=MjQzODY4MDVTVDEwMDE1' },
+  { id: -13, name: 'DSLM', url: 'https://portal.dlsm.com/register?node=MTk5OTQ=&language=zh-Hans' }
+];
+
 function loadPlatforms() {
   try {
     const raw = localStorage.getItem(PLATFORM_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const stored = JSON.parse(raw);
+      // Merge: keep stored entries, add defaults not yet present (dedup by name)
+      const storedNames = new Set(stored.map(p => p.name));
+      let merged = stored.slice();
+      FOREX_PLATFORM_DEFAULTS.forEach(function(d) {
+        if (!storedNames.has(d.name)) merged.push(Object.assign({}, d));
+      });
+      return merged;
+    }
   } catch(e) {}
-  return [];
+  // No localStorage: return defaults
+  return FOREX_PLATFORM_DEFAULTS.map(function(d) { return Object.assign({}, d); });
 }
 
 function savePlatforms(platforms) {
@@ -3074,12 +3090,29 @@ function savePlatforms(platforms) {
   }
 }
 
+const CRYPTO_PLATFORM_DEFAULTS = [
+  { id: -1, name: '币安', url: 'https://www.bsmkweb.cc/register?ref=ZC0713' },
+  { id: -2, name: '欧易', url: 'https://www.promoohivex.com/join/1935329' },
+  { id: -3, name: '深币', url: 'https://s.xdcjoin.com/S928300' },
+  { id: -4, name: 'Bitget', url: 'https://www.bitget.org/zh-CN/referral/register?clacCode=KSBY9HLG&from=%2Fzh-CN%2Fevents%2Freferral-all-program&source=events&utmSource=PremierInviter' }
+];
+
 function loadCryptoPlatforms() {
   try {
     const raw = localStorage.getItem(CRYPTO_PLATFORM_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const stored = JSON.parse(raw);
+      // Merge: keep stored entries, add defaults not yet present (dedup by name)
+      const storedNames = new Set(stored.map(p => p.name));
+      let merged = stored.slice();
+      CRYPTO_PLATFORM_DEFAULTS.forEach(function(d) {
+        if (!storedNames.has(d.name)) merged.push(Object.assign({}, d));
+      });
+      return merged;
+    }
   } catch(e) {}
-  return [];
+  // No localStorage: return defaults
+  return CRYPTO_PLATFORM_DEFAULTS.map(function(d) { return Object.assign({}, d); });
 }
 
 function saveCryptoPlatforms(platforms) {
