@@ -1,0 +1,3947 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>交易员曝光平台 - TraderWatch</title>
+<style>
+:root {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2129;
+  --bg-input: #0f1319;
+  --border: #30363d;
+  --border-active: #c0392b;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --accent: #c0392b;
+  --accent-hover: #e74c3c;
+  --accent-soft: rgba(192,57,43,0.15);
+  --gold: #c9a84c;
+  --green: #2ecc71;
+  --red: #e74c3c;
+  --tag-bg: #21262d;
+  --shadow: 0 2px 8px rgba(0,0,0,0.4);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --font-mono: 'SF Mono','Cascadia Code','Consolas',monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC','Microsoft YaHei',sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+.header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.header-inner {
+  max-width: 70%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--accent), #8b1a1a);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.logo-text h1 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+}
+
+.logo-text span {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  display: block;
+  line-height: 1.2;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(192,57,43,0.3);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.btn-outline:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  font-size: 0.8rem;
+}
+
+.btn-ghost:hover {
+  color: var(--text-primary);
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+/* Main */
+.main {
+  max-width: 70%;
+  margin: 0;
+  padding: 16px;
+}
+
+/* Search & Filter Bar */
+.search-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.search-input-wrap {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+
+.search-input-wrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.search-input:focus {
+  border-color: var(--accent);
+}
+
+.filter-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-tag {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  background: var(--tag-bg);
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.filter-tag.active {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  border-color: var(--accent);
+}
+
+.filter-tag:hover {
+  border-color: var(--accent);
+  color: var(--accent-hover);
+}
+
+/* Post Card */
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.post-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.post-card:hover {
+  border-color: #484f58;
+}
+
+.post-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.post-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+  word-break: break-word;
+}
+
+.post-badge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--accent-soft);
+  color: var(--accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.post-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.post-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 12px;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+/* Evidence */
+.evidence-section {
+  margin-bottom: 12px;
+}
+
+.evidence-label {
+  font-size: 0.72rem;
+  color: var(--gold);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.evidence-images {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.evidence-img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.evidence-img:hover {
+  transform: scale(1.05);
+}
+
+.evidence-link {
+  display: inline-block;
+  font-size: 0.78rem;
+  color: var(--accent);
+  word-break: break-all;
+  background: var(--bg-input);
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin: 2px 4px 2px 0;
+  text-decoration: none;
+  border: 1px solid var(--border);
+}
+
+.evidence-link:hover {
+  border-color: var(--accent);
+}
+
+/* Tags */
+.tag-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.tag {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  background: var(--tag-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+/* Dynamic tag colors — auto-applied via JS style attribute; legacy classes for backward compat */
+.tag.scam { color: #e74c3c; border-color: #e74c3c40; background: #e74c3c10; }
+.tag.fake-platform { color: #e67e22; border-color: #e67e2240; background: #e67e2210; }
+.tag.churning { color: #f1c40f; border-color: #f1c40f40; background: #f1c40f10; }
+.tag.other { color: var(--text-muted); }
+
+/* ==================== ADMIN TABLE TAGS ==================== */
+.admin-table .col-tag {
+  white-space: nowrap;
+}
+
+/* Actions Bar */
+.actions-bar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  transition: color 0.2s;
+}
+
+.action-btn:hover {
+  color: var(--text-primary);
+}
+
+.action-btn.liked {
+  color: var(--accent-hover);
+}
+
+.action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Comments Section */
+.comments-section {
+  margin-top: 12px;
+  display: none;
+}
+
+.comments-section.open {
+  display: block;
+}
+
+.comment-list {
+  margin-bottom: 10px;
+}
+
+.comment-item {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+}
+
+.comment-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.comment-body {
+  flex: 1;
+}
+
+.comment-author {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.comment-text {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 2px 0;
+  word-break: break-word;
+}
+
+.comment-time {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.comment-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.comment-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.comment-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  outline: none;
+}
+
+.comment-input:focus {
+  border-color: var(--accent);
+}
+
+.comment-submit {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.comment-submit:hover {
+  background: var(--accent-hover);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+  animation: fadeIn 0.2s;
+}
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 560px;
+  padding: 24px;
+  animation: slideUp 0.25s;
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+}
+
+.form-input, .form-textarea, .form-select {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--accent);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.form-select {
+  cursor: pointer;
+}
+
+.form-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.evidence-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.btn-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-cancel:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.btn-submit {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.btn-submit:hover {
+  background: var(--accent-hover);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+
+.empty-state .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 0.9rem;
+}
+
+/* Image Preview Modal */
+.img-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  animation: fadeIn 0.2s;
+}
+
+.img-preview-overlay img {
+  max-width: 95vw;
+  max-height: 90vh;
+  border-radius: 4px;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.6);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  z-index: 400;
+  animation: slideUp 0.3s, fadeOut 0.3s 1.7s forwards;
+  box-shadow: var(--shadow);
+}
+
+/* Stats bar */
+.stats-bar {
+  display: flex;
+  gap: 16px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.stats-bar span {
+  background: var(--bg-card);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
+
+.stats-bar .count {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .post-header {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .post-badge {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+  .search-bar {
+    flex-direction: column;
+  }
+  .modal {
+    padding: 16px;
+  }
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ==================== ADMIN ==================== */
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-admin {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-admin:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+/* Password Modal */
+.password-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 380px;
+  padding: 28px;
+  animation: slideUp 0.25s;
+}
+
+.password-modal .modal-title {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.password-modal .modal-subtitle {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.password-error {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--red);
+  margin-top: 8px;
+  min-height: 20px;
+}
+
+/* Admin Panel */
+.admin-panel {
+  display: none;
+  background: var(--bg-secondary);
+  min-height: calc(100vh - 56px);
+}
+
+.admin-panel.open {
+  display: block;
+}
+
+.admin-toolbar {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-toolbar h2 {
+  font-size: 1.05rem;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.admin-toolbar .btn-exit {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: all 0.2s;
+}
+
+.admin-toolbar .btn-exit:hover {
+  border-color: var(--accent);
+  color: var(--accent-hover);
+}
+
+.admin-table-wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 16px 20px;
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 2px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  vertical-align: top;
+}
+
+.admin-table tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+
+.admin-table .col-title {
+  min-width: 160px;
+  max-width: 260px;
+  word-break: break-word;
+}
+
+.admin-table .col-tag {
+  white-space: nowrap;
+}
+
+.admin-table .col-time {
+  white-space: nowrap;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.admin-table .col-comments {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-table .col-actions {
+  white-space: nowrap;
+}
+
+.admin-badge-pin {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: var(--gold);
+  color: #0d1117;
+  margin-right: 4px;
+}
+
+.admin-comment-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 0.75rem;
+  border-bottom: 1px dashed #30363d40;
+}
+
+.admin-comment-row:last-child {
+  border-bottom: none;
+}
+
+.admin-comment-text {
+  flex: 1;
+  color: var(--text-secondary);
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.admin-comment-del {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 1px 4px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.admin-comment-del:hover {
+  color: var(--red);
+  background: rgba(231,76,60,0.1);
+}
+
+.admin-no-comments {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Admin delete confirm */
+.admin-delete-confirm {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 350;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s;
+}
+
+.admin-confirm-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.admin-confirm-box p {
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.admin-confirm-box .confirm-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--red);
+  margin-bottom: 8px;
+}
+
+.admin-confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Change Password Modal */
+.change-pwd-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 400px;
+  padding: 24px;
+  animation: slideUp 0.25s;
+}
+
+.change-pwd-modal .modal-title {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.change-pwd-error {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--red);
+  margin-top: 6px;
+  min-height: 20px;
+}
+
+.change-pwd-success {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--green);
+  margin-top: 6px;
+  min-height: 20px;
+}
+
+@media (max-width: 480px) {
+  .header-actions {
+    gap: 4px;
+  }
+  .btn-admin {
+    padding: 5px 8px;
+    font-size: 0.7rem;
+  }
+  .admin-toolbar {
+    padding: 12px 14px;
+  }
+  .admin-table-wrap {
+    padding: 12px 8px;
+  }
+  .admin-table {
+    font-size: 0.7rem;
+  }
+  .admin-table th, .admin-table td {
+    padding: 6px 4px;
+  }
+}
+
+/* ==================== EXPOSED NAME ==================== */
+.post-exposed-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--red);
+  background: rgba(231,76,60,0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(231,76,60,0.25);
+}
+
+.post-exposed-name svg {
+  width: 12px;
+  height: 12px;
+}
+
+.admin-exposed-cell {
+  font-size: 0.78rem;
+  color: var(--red);
+  cursor: pointer;
+  min-width: 80px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.admin-exposed-cell:hover {
+  border-color: var(--border);
+  background: rgba(255,255,255,0.03);
+}
+
+.admin-exposed-cell .edit-hint {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  margin-left: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.admin-exposed-cell:hover .edit-hint {
+  opacity: 1;
+}
+
+.admin-inline-edit {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.admin-inline-edit input {
+  width: 100px;
+  padding: 3px 6px;
+  font-size: 0.75rem;
+  background: var(--bg-input);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.admin-inline-edit button {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  background: var(--accent);
+  color: #fff;
+}
+
+.admin-inline-edit .btn-cancel-inline {
+  background: var(--border);
+  color: var(--text-secondary);
+}
+
+/* ==================== ADMIN TABS ==================== */
+.admin-tabs {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border);
+}
+
+.admin-tab {
+  padding: 10px 20px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.admin-tab:hover {
+  color: var(--text-primary);
+}
+
+.admin-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.admin-tab-content {
+  display: none;
+}
+
+.admin-tab-content.active {
+  display: block;
+}
+
+/* ==================== BOTTOM NAV ==================== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+  z-index: 90;
+  backdrop-filter: blur(12px);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px 12px;
+  transition: color 0.2s;
+}
+
+.bottom-nav-item:hover {
+  color: var(--text-secondary);
+}
+
+.bottom-nav-item.active {
+  color: var(--accent);
+}
+
+.bottom-nav-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ==================== PLATFORM PAGE ==================== */
+.platform-page {
+  display: none;
+  max-width: 70%;
+  margin: 0;
+  padding: 16px 16px 80px;
+}
+
+.platform-page.open {
+  display: block;
+}
+
+.platform-page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.platform-page-header h2 {
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.platform-page-header .platform-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--tag-bg);
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+
+.platform-subtabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.platform-subtab {
+  padding: 8px 18px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.platform-subtab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.platform-subtab:hover {
+  color: var(--text-primary);
+}
+
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.platform-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.platform-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(192,57,43,0.12);
+  transform: translateY(-2px);
+}
+
+.platform-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.platform-card-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.platform-card-url {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  word-break: break-all;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.platform-card-url svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.platform-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  grid-column: 1 / -1;
+}
+
+/* ==================== SUGGESTION ==================== */
+.suggestion-link-wrap {
+  text-align: center;
+  padding: 24px 0 8px;
+}
+.suggestion-link {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 2px;
+}
+.suggestion-link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.suggestion-textarea {
+  width: 100%;
+  min-height: 120px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.suggestion-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.suggestion-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* ==================== ADMIN PLATFORM MANAGEMENT ==================== */
+.admin-platform-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.platform-admin-table td {
+  vertical-align: middle;
+}
+
+.platform-admin-edit-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.platform-admin-edit-group input {
+  padding: 5px 8px;
+  font-size: 0.75rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.platform-admin-edit-group input:focus {
+  border-color: var(--accent);
+}
+
+/* ==================== ADMIN EXIT FIX ==================== */
+.admin-panel .admin-content {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* ==================== MAIN PADDING FOR BOTTOM NAV ==================== */
+.main {
+  padding-bottom: 70px;
+}
+
+.platform-page {
+  padding-bottom: 80px;
+}
+
+/* ==================== DOWNLOAD CARDS (EA/指标/软件) ==================== */
+.download-page {
+  display: none;
+  max-width: 70%;
+  margin: 0;
+  padding: 16px 16px 80px;
+}
+
+.download-page.open {
+  display: block;
+}
+
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.download-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.download-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(192,57,43,0.12);
+}
+
+.download-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.download-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.download-card-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.download-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.download-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  align-self: flex-start;
+  transition: all 0.2s;
+}
+
+.download-card-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.download-card-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.download-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  grid-column: 1 / -1;
+}
+
+.download-card-price {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.download-card-price.free {
+  color: var(--success);
+}
+
+.download-card-buy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.download-card-buy-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.download-card-buy-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.download-card-buy-btn.purchased {
+  background: var(--success);
+}
+
+.download-card-buy-btn.purchased:hover {
+  background: #22c55e;
+}
+
+.item-file-input {
+  padding: 6px 8px !important;
+  font-size: 0.78rem !important;
+  border: 1px dashed var(--text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.item-file-input:hover {
+  border-color: var(--accent);
+}
+
+.item-file-name {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  word-break: break-all;
+}
+
+/* Payment Modal */
+.payment-modal-inner {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 24px;
+  width: 360px;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.payment-modal-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.payment-modal-price {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent);
+  margin: 12px 0;
+}
+
+.payment-modal-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.payment-modal-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.payment-modal-btns button {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.payment-modal-btns button.btn-pay-confirm {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.payment-modal-btns button:hover {
+  transform: translateY(-1px);
+}
+
+/* Admin item management table */
+.item-admin-table td {
+  vertical-align: middle;
+}
+
+.item-admin-desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  max-width: 260px;
+  word-break: break-word;
+}
+
+/* ==================== K-Line Trainer Sidebar ==================== */
+.kline-sidebar {
+  position: fixed;
+  top: 56px;
+  right: 0;
+  width: 30%;
+  bottom: 56px;
+  z-index: 99;
+  pointer-events: auto;
+}
+.kline-sidebar iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  background: var(--bg-secondary);
+}
+
+/* Mobile: hide sidebar, restore full width */
+@media (max-width: 768px) {
+  .kline-sidebar {
+    display: none;
+  }
+  .header-inner,
+  .main,
+  .platform-page,
+  .download-page {
+    max-width: 100%;
+    margin: 0;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">TW</div>
+      <div class="logo-text">
+        <h1>TraderWatch</h1>
+        <span>交易员曝光平台</span>
+      </div>
+    </div>
+      <button class="btn btn-primary" onclick="openPublishModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        发布曝光
+      </button>
+  </div>
+</header>
+
+<!-- K-Line Trainer Sidebar -->
+<div class="kline-sidebar">
+  <iframe src="https://zc071313.github.io/k-line-trainer/" title="K线训练器"></iframe>
+</div>
+
+<!-- Main Content -->
+<main class="main">
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- Search & Filter -->
+  <div class="search-bar">
+    <div class="search-input-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="search-input" id="searchInput" placeholder="搜索曝光标题或关键词..." oninput="renderPosts()">
+    </div>
+  </div>
+  <div class="filter-tags" id="filterTags">
+    <span class="filter-tag active" data-tag="all" onclick="setFilter('all', this)">全部</span>
+  </div>
+
+  <!-- Post List -->
+  <div class="post-list" id="postList"></div>
+
+  <!-- Suggestion Link -->
+  <div class="suggestion-link-wrap">
+    <a class="suggestion-link" onclick="openSuggestionModal()">给网站提建议</a>
+  </div>
+</main>
+
+<!-- Platform List Page -->
+<div class="platform-page" id="platformPage">
+  <div class="platform-page-header">
+    <h2>平台列表</h2>
+    <span class="platform-count" id="platformCount">0 个平台</span>
+  </div>
+  <div class="platform-subtabs">
+    <span class="platform-subtab active" data-ptab="forex" onclick="switchPlatformTab('forex')">外汇平台</span>
+    <span class="platform-subtab" data-ptab="crypto" onclick="switchPlatformTab('crypto')">币圈列表</span>
+  </div>
+  <div class="platform-grid" id="platformGrid"></div>
+  <div class="platform-grid" id="cryptoGrid" style="display:none;"></div>
+</div>
+
+<!-- EA Page -->
+<div class="download-page" id="eaPage">
+  <div class="platform-page-header">
+    <h2>EA 交易程序</h2>
+    <span class="platform-count" id="eaCount">0 个</span>
+  </div>
+  <div class="download-grid" id="eaGrid"></div>
+</div>
+
+<!-- Indicators Page -->
+<div class="download-page" id="indicatorPage">
+  <div class="platform-page-header">
+    <h2>交易指标工具</h2>
+    <span class="platform-count" id="indicatorCount">0 个</span>
+  </div>
+  <div class="download-grid" id="indicatorGrid"></div>
+</div>
+
+<!-- Software Download Page -->
+<div class="download-page" id="softwarePage">
+  <div class="platform-page-header">
+    <h2>交易相关软件</h2>
+    <span class="platform-count" id="softwareCount">0 个</span>
+  </div>
+  <div class="download-grid" id="softwareGrid"></div>
+</div>
+
+<!-- Suggestion Modal -->
+<div class="modal-overlay" id="suggestionModal" style="display:none;">
+  <div class="change-pwd-modal" style="max-width:420px;">
+    <div class="modal-title">给网站建议</div>
+    <div class="form-group">
+      <textarea class="suggestion-textarea" id="suggestionText" placeholder="请写下您的建议或反馈..."></textarea>
+    </div>
+    <div class="admin-confirm-actions" style="margin-top:16px;">
+      <button class="btn-cancel" onclick="closeSuggestionModal()">取消</button>
+      <button class="btn-submit" onclick="submitSuggestion()">提交建议</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="bottom-nav-item active" data-page="home" onclick="switchPage('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    首页
+  </button>
+  <button class="bottom-nav-item" data-page="ea" onclick="switchPage('ea')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    EA
+  </button>
+  <button class="bottom-nav-item" data-page="indicators" onclick="switchPage('indicators')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    指标
+  </button>
+  <button class="bottom-nav-item" data-page="software" onclick="switchPage('software')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+    软件下载
+  </button>
+  <button class="bottom-nav-item" data-page="platforms" onclick="switchPage('platforms')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    平台
+  </button>
+</nav>
+
+
+<!-- Publish Modal -->
+<div class="modal-overlay" id="publishModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title">发布曝光帖</div>
+    <div class="form-group">
+      <label class="form-label">曝光标题 *</label>
+      <input type="text" class="form-input" id="postTitle" placeholder="如：XX平台诱导交易 骗取入金">
+    </div>
+    <div class="form-group">
+      <label class="form-label">被曝光者姓名</label>
+      <input type="text" class="form-input" id="postExposedName" placeholder="如：张三、XX代理">
+    </div>
+    <div class="form-group">
+      <label class="form-label">详细描述 *</label>
+      <textarea class="form-textarea" id="postDesc" placeholder="请详细描述被骗经过、涉及金额、时间线等..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">证据链（图片截图URL或链接）</label>
+      <div id="evidenceContainer">
+        <div class="evidence-input-group">
+          <input type="text" class="form-input" placeholder="https://example.com/evidence1.png">
+          <button class="btn btn-sm btn-outline" onclick="removeEvidenceInput(this)" style="visibility:hidden;">-</button>
+        </div>
+      </div>
+      <div class="form-hint">支持图片URL或截图链接，多个证据逐一添加</div>
+      <button class="btn btn-sm btn-outline" style="margin-top:6px;" onclick="addEvidenceInput()">+ 添加证据</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">骗局类型标签 *</label>
+      <select class="form-select" id="postScamType">
+        <option value="">请选择标签</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" onclick="closePublishModal()">取消</button>
+      <button class="btn-submit" onclick="publishPost()">提交曝光</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image Preview -->
+<div class="img-preview-overlay" id="imgPreview" style="display:none;" onclick="closeImgPreview()">
+  <img id="imgPreviewSrc" src="" alt="预览">
+</div>
+
+<!-- Password Modal -->
+<div class="modal-overlay" id="passwordModal" style="display:none;">
+  <div class="password-modal">
+    <div class="modal-title">管理中心</div>
+    <div class="modal-subtitle">请输入管理员密码以继续</div>
+    <div class="form-group">
+      <input type="password" class="form-input" id="adminPasswordInput" placeholder="请输入密码" onkeydown="if(event.key==='Enter')verifyAdminPassword()">
+    </div>
+    <div class="password-error" id="passwordError"></div>
+    <div class="form-actions" style="margin-top:12px;">
+      <button class="btn-cancel" onclick="closePasswordModal()">取消</button>
+      <button class="btn-submit" onclick="verifyAdminPassword()">验证</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div class="admin-panel" id="adminPanel">
+  <div class="admin-toolbar">
+    <h2>管理中心</h2>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-sm btn-outline" onclick="openChangePasswordModal()">修改密码</button>
+      <button class="btn-exit" onclick="exitAdmin()">退出管理</button>
+    </div>
+  </div>
+  <div class="admin-tabs">
+    <span class="admin-tab active" data-tab="posts" onclick="switchAdminTab('posts')">帖子管理</span>
+    <span class="admin-tab" data-tab="platforms" onclick="switchAdminTab('platforms')">平台管理</span>
+    <span class="admin-tab" data-tab="tags" onclick="switchAdminTab('tags')">标签管理</span>
+    <span class="admin-tab" data-tab="ea" onclick="switchAdminTab('ea')">EA管理</span>
+    <span class="admin-tab" data-tab="indicators" onclick="switchAdminTab('indicators')">指标管理</span>
+    <span class="admin-tab" data-tab="software" onclick="switchAdminTab('software')">软件下载</span>
+    <span class="admin-tab" data-tab="suggestions" onclick="switchAdminTab('suggestions')">建议管理</span>
+  </div>
+  <div class="admin-content">
+    <div class="admin-tab-content active" id="adminTabPosts">
+      <div class="admin-table-wrap" id="adminTableWrap"></div>
+    </div>
+    <div class="admin-tab-content" id="adminTabPlatforms">
+      <div class="platform-subtabs" style="border-bottom:none;margin-bottom:12px;">
+        <span class="platform-subtab active" data-aptab="forex" onclick="switchAdminPlatformTab('forex')">外汇平台</span>
+        <span class="platform-subtab" data-aptab="crypto" onclick="switchAdminPlatformTab('crypto')">币圈列表</span>
+      </div>
+      <div class="admin-table-wrap" id="adminForexTableWrap">
+        <div class="admin-platform-toolbar">
+          <button class="btn btn-sm btn-primary" onclick="openAddPlatformModal()">+ 添加外汇平台</button>
+        </div>
+        <table class="admin-table platform-admin-table">
+          <thead><tr>
+            <th>平台名称</th>
+            <th>网址</th>
+            <th style="width:100px;">操作</th>
+          </tr></thead>
+          <tbody id="adminPlatformTableBody"></tbody>
+        </table>
+      </div>
+      <div class="admin-table-wrap" id="adminCryptoTableWrap" style="display:none;">
+        <div class="admin-platform-toolbar">
+          <button class="btn btn-sm btn-primary" onclick="openAddCryptoPlatformModal()">+ 添加币圈平台</button>
+        </div>
+        <table class="admin-table platform-admin-table">
+          <thead><tr>
+            <th>平台名称</th>
+            <th>网址</th>
+            <th style="width:100px;">操作</th>
+          </tr></thead>
+          <tbody id="adminCryptoPlatformTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="admin-tab-content" id="adminTabTags">
+      <div class="admin-table-wrap">
+        <div class="admin-platform-toolbar">
+          <button class="btn btn-sm btn-primary" onclick="openTagModal()">+ 添加标签</button>
+        </div>
+        <table class="admin-table">
+          <thead><tr>
+            <th>标签名称</th>
+            <th style="width:120px;">引用数</th>
+            <th style="width:100px;">操作</th>
+          </tr></thead>
+          <tbody id="adminTagTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="admin-tab-content" id="adminTabEA">
+      <div class="admin-table-wrap">
+        <div class="admin-platform-toolbar">
+          <button class="btn btn-sm btn-primary" onclick="openAddItemModal('ea')">+ 添加EA</button>
+        </div>
+        <table class="admin-table item-admin-table">
+          <thead><tr>
+            <th>名称</th>
+            <th>描述</th>
+            <th>价格</th>
+            <th>下载链接</th>
+            <th style="width:100px;">操作</th>
+          </tr></thead>
+          <tbody id="adminEATableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="admin-tab-content" id="adminTabIndicators">
+      <div class="admin-table-wrap">
+        <div class="admin-platform-toolbar">
+          <button class="btn btn-sm btn-primary" onclick="openAddItemModal('indicator')">+ 添加指标</button>
+        </div>
+        <table class="admin-table item-admin-table">
+          <thead><tr>
+            <th>名称</th>
+            <th>描述</th>
+            <th>价格</th>
+            <th>下载链接</th>
+            <th style="width:100px;">操作</th>
+          </tr></thead>
+          <tbody id="adminIndicatorTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="admin-tab-content" id="adminTabSoftware">
+      <div class="admin-table-wrap">
+        <div class="admin-platform-toolbar">
+          <button class="btn btn-sm btn-primary" onclick="openAddItemModal('software')">+ 添加软件</button>
+        </div>
+        <table class="admin-table item-admin-table">
+          <thead><tr>
+            <th>名称</th>
+            <th>描述</th>
+            <th>价格</th>
+            <th>下载链接</th>
+            <th style="width:100px;">操作</th>
+          </tr></thead>
+          <tbody id="adminSoftwareTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="admin-tab-content" id="adminTabSuggestions">
+      <div class="admin-table-wrap" id="adminSuggestionsTableWrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Download Item Modal (EA/指标/软件通用) -->
+<div class="modal-overlay" id="itemModal" style="display:none;">
+  <div class="change-pwd-modal" style="max-width:460px;">
+    <div class="modal-title" id="itemModalTitle">添加</div>
+    <div class="form-group">
+      <label class="form-label">名称 *</label>
+      <input type="text" class="form-input" id="itemName" placeholder="输入名称">
+    </div>
+    <div class="form-group">
+      <label class="form-label">描述</label>
+      <textarea class="form-input" id="itemDesc" rows="3" placeholder="输入描述" style="resize:vertical;"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">价格（0 表示免费）</label>
+      <input type="number" class="form-input" id="itemPrice" placeholder="0" min="0" step="0.01" value="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">上传本地文件</label>
+      <input type="file" class="form-input item-file-input" id="itemFileInput" onchange="handleItemFileChange(this)">
+      <div class="item-file-name" id="itemFileName"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">下载链接（可选，上传文件后可不填）</label>
+      <input type="text" class="form-input" id="itemUrl" placeholder="https://..." onkeydown="if(event.key==='Enter')saveItem()">
+    </div>
+    <input type="hidden" id="itemEditId">
+    <input type="hidden" id="itemType">
+    <input type="hidden" id="itemFileData" value="">
+    <div class="admin-confirm-actions" style="margin-top:16px;">
+      <button class="btn-cancel" onclick="closeItemModal()">取消</button>
+      <button class="btn-submit" onclick="saveItem()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Delete Confirm -->
+<div class="admin-delete-confirm" id="adminDeleteConfirm" style="display:none;">
+  <div class="admin-confirm-box">
+    <div class="confirm-title">确认删除</div>
+    <p id="adminDeleteMsg"></p>
+    <div class="admin-confirm-actions">
+      <button class="btn-cancel" onclick="closeAdminDeleteConfirm()">取消</button>
+      <button class="btn-submit" id="adminDeleteConfirmBtn">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="paymentModal" style="display:none;">
+  <div class="payment-modal-inner">
+    <div class="payment-modal-title" id="paymentModalTitle">购买下载</div>
+    <div class="payment-modal-price" id="paymentModalPrice"></div>
+    <div class="payment-modal-desc">
+      请扫描下方二维码完成支付，或联系管理员获取授权。<br>
+      支付完成后点击下方「确认已支付」即可下载。
+    </div>
+    <div class="payment-modal-btns">
+      <button onclick="closePaymentModal()">取消</button>
+      <button class="btn-pay-confirm" id="paymentConfirmBtn">确认已支付</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tag Modal -->
+<div class="modal-overlay" id="tagModal" style="display:none;">
+  <div class="change-pwd-modal" style="max-width:380px;">
+    <div class="modal-title" id="tagModalTitle">添加标签</div>
+    <div class="form-group">
+      <label class="form-label">标签名称 *</label>
+      <input type="text" class="form-input" id="tagNameInput" placeholder="如：杀猪盘" maxlength="10" onkeydown="if(event.key==='Enter')saveTag()">
+    </div>
+    <input type="hidden" id="tagEditKey">
+    <div class="admin-confirm-actions" style="margin-top:16px;">
+      <button class="btn-cancel" onclick="closeTagModal()">取消</button>
+      <button class="btn-submit" onclick="saveTag()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal-overlay" id="changePasswordModal" style="display:none;">
+  <div class="change-pwd-modal">
+    <div class="modal-title">修改管理员密码</div>
+    <div class="form-group">
+      <label class="form-label">旧密码</label>
+      <input type="password" class="form-input" id="oldPassword" placeholder="请输入当前密码">
+    </div>
+    <div class="form-group">
+      <label class="form-label">新密码</label>
+      <input type="password" class="form-input" id="newPassword" placeholder="请输入新密码">
+    </div>
+    <div class="form-group">
+      <label class="form-label">确认新密码</label>
+      <input type="password" class="form-input" id="confirmPassword" placeholder="请再次输入新密码" onkeydown="if(event.key==='Enter')submitChangePassword()">
+    </div>
+    <div class="change-pwd-error" id="changePwdError"></div>
+    <div class="change-pwd-success" id="changePwdSuccess"></div>
+    <div class="form-actions" style="margin-top:12px;">
+      <button class="btn-cancel" onclick="closeChangePasswordModal()">取消</button>
+      <button class="btn-submit" onclick="submitChangePassword()">确认修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- Platform Add/Edit Modal -->
+<div class="modal-overlay" id="platformModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title" id="platformModalTitle">添加平台</div>
+    <div class="form-group">
+      <label class="form-label">平台名称 *</label>
+      <input type="text" class="form-input" id="platformName" placeholder="如：FXCM、OANDA">
+    </div>
+    <div class="form-group">
+      <label class="form-label">平台网址 *</label>
+      <input type="text" class="form-input" id="platformUrl" placeholder="https://www.example.com">
+    </div>
+    <input type="hidden" id="platformEditId" value="">
+    <div class="form-actions">
+      <button class="btn-cancel" onclick="closePlatformModal()">取消</button>
+      <button class="btn-submit" onclick="savePlatform()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== DATA STORE ====================
+const STORAGE_KEY = 'traderwatch_data';
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { posts: [], nextId: 1 };
+}
+
+function saveData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch(e) {
+    showToast('存储空间不足，请清理部分数据');
+  }
+}
+
+let appData = loadData();
+
+// ==================== TAG DATA ====================
+const TAG_STORAGE_KEY = 'traderwatch_tags';
+const TAG_COLORS = [
+  '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db',
+  '#9b59b6', '#1abc9c', '#e91e63', '#00bcd4', '#ff5722'
+];
+
+const TAG_DEFAULTS = [
+  '杀猪盘', '黑平台', '假牌照', '喊单诈骗', '资金盘', '其他'
+];
+
+// Tag structure: { key: string (slug/identifier), name: string (display) }
+function loadTags() {
+  try {
+    const raw = localStorage.getItem(TAG_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  // Init with defaults
+  const defaults = TAG_DEFAULTS.map((name, i) => ({ key: 'tag_' + i, name }));
+  saveTags(defaults);
+  return defaults;
+}
+
+function saveTags(tags) {
+  try {
+    localStorage.setItem(TAG_STORAGE_KEY, JSON.stringify(tags));
+  } catch(e) {
+    showToast('存储空间不足');
+  }
+}
+
+let tagData = loadTags();
+
+function getTagName(key) {
+  const tag = tagData.find(t => t.key === key);
+  return tag ? tag.name : key;
+}
+
+function getTagColor(key) {
+  const idx = tagData.findIndex(t => t.key === key);
+  return idx >= 0 ? TAG_COLORS[idx % TAG_COLORS.length] : 'var(--text-muted)';
+}
+
+function getTagStyle(key) {
+  const color = getTagColor(key);
+  return `color:${color};border-color:${color}40;background:${color}10;`;
+}
+
+function genTagKey(name) {
+  // Generate pinyin-like slug from Chinese characters
+  let key = name.replace(/[\s\u4e00-\u9fff]/g, function(m) {
+    // Simple hash-based approach for Chinese
+    let hash = 0;
+    for (let i = 0; i < m.length; i++) {
+      hash = ((hash << 5) - hash) + m.charCodeAt(i);
+      hash |= 0;
+    }
+    return 't' + Math.abs(hash).toString(36);
+  });
+  // Ensure uniqueness
+  if (tagData.some(t => t.key === key)) {
+    key += '_' + Date.now().toString(36);
+  }
+  return key;
+}
+
+// Compute usage count of a tag key across posts
+function getTagUsageCount(key) {
+  return appData.posts.filter(p => p.scamType === key).length;
+}
+
+// ==================== UTILS ====================
+function genId() {
+  return appData.nextId++;
+}
+
+function formatTime(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff/60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff/3600000) + '小时前';
+  if (diff < 604800000) return Math.floor(diff/86400000) + '天前';
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + day;
+}
+
+function showToast(msg, dur) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), dur || 2000);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+
+// ==================== SVG ICONS ====================
+const icons = {
+  like: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+  comment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>'
+};
+
+// ==================== PUBLISH ====================
+function openPublishModal() {
+  document.getElementById('publishModal').style.display = 'flex';
+  document.getElementById('postTitle').value = '';
+  document.getElementById('postExposedName').value = '';
+  document.getElementById('postDesc').value = '';
+  populateTagSelect();
+  document.getElementById('postScamType').value = '';
+  document.getElementById('evidenceContainer').innerHTML = `
+    <div class="evidence-input-group">
+      <input type="text" class="form-input evidence-input" placeholder="https://example.com/evidence1.png">
+      <button class="btn btn-sm btn-outline" onclick="removeEvidenceInput(this)" style="visibility:hidden;">-</button>
+    </div>`;
+}
+
+function closePublishModal() {
+  document.getElementById('publishModal').style.display = 'none';
+}
+
+function addEvidenceInput() {
+  const container = document.getElementById('evidenceContainer');
+  const div = document.createElement('div');
+  div.className = 'evidence-input-group';
+  div.innerHTML = `
+    <input type="text" class="form-input evidence-input" placeholder="图片URL或截图链接">
+    <button class="btn btn-sm btn-outline" onclick="removeEvidenceInput(this)">-</button>`;
+  container.appendChild(div);
+}
+
+function removeEvidenceInput(btn) {
+  const group = btn.parentElement;
+  const container = document.getElementById('evidenceContainer');
+  if (container.children.length > 1) {
+    group.remove();
+  }
+}
+
+function publishPost() {
+  const title = document.getElementById('postTitle').value.trim();
+  const exposedName = document.getElementById('postExposedName').value.trim();
+  const desc = document.getElementById('postDesc').value.trim();
+  const scamType = document.getElementById('postScamType').value;
+  if (!title || !desc || !scamType) {
+    showToast('请填写标题、描述和选择骗局类型');
+    return;
+  }
+  const evidenceInputs = document.querySelectorAll('#evidenceContainer .evidence-input');
+  const evidence = [];
+  evidenceInputs.forEach(inp => {
+    const v = inp.value.trim();
+    if (v) evidence.push(v);
+  });
+
+  const post = {
+    id: genId(),
+    title,
+    exposedName: exposedName || '',
+    description: desc,
+    evidence,
+    scamType,
+    createdAt: Date.now(),
+    likes: [],
+    comments: [],
+    pinned: false
+  };
+
+  appData.posts.unshift(post);
+  saveData(appData);
+  closePublishModal();
+  renderAll();
+  showToast('曝光帖已发布');
+}
+
+// ==================== RENDER ====================
+let currentFilter = 'all';
+
+function setFilter(tag, el) {
+  currentFilter = tag;
+  document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderPosts();
+}
+
+function renderAll() {
+  renderStatsAndFilters();
+  renderPosts();
+}
+
+function renderStatsAndFilters() {
+  const posts = appData.posts;
+  // Stats bar — show top 3 tags by usage
+  const tagCounts = {};
+  tagData.forEach(t => { tagCounts[t.key] = posts.filter(p => p.scamType === t.key).length; });
+  const topTags = tagData
+    .map(t => ({ name: t.name, count: tagCounts[t.key] }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+
+  document.getElementById('statsBar').innerHTML = `
+    <span>曝光总数 <span class="count">${posts.length}</span></span>
+    ${topTags.map(t => `<span>${t.name} <span class="count">${t.count}</span></span>`).join('')}
+  `;
+
+  // Filter tags
+  document.getElementById('filterTags').innerHTML =
+    `<span class="filter-tag${currentFilter==='all'?' active':''}" data-tag="all" onclick="setFilter('all', this)">全部</span>` +
+    tagData.map(t =>
+      `<span class="filter-tag${t.key===currentFilter?' active':''}" data-tag="${t.key}" onclick="setFilter('${t.key}', this)">${t.name}</span>`
+    ).join('');
+}
+
+function getFilteredPosts() {
+  const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+  let posts = [...appData.posts];
+  // Sort: pinned first, then by time desc
+  posts.sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return b.createdAt - a.createdAt;
+  });
+  if (currentFilter !== 'all') {
+    posts = posts.filter(p => p.scamType === currentFilter);
+  }
+  if (keyword) {
+    posts = posts.filter(p => p.title.toLowerCase().includes(keyword) || p.description.toLowerCase().includes(keyword) || (p.exposedName && p.exposedName.toLowerCase().includes(keyword)));
+  }
+  return posts;
+}
+
+function renderPosts() {
+  const posts = getFilteredPosts();
+  const container = document.getElementById('postList');
+
+  if (posts.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p>暂无曝光帖</p>
+        <p style="font-size:0.78rem;margin-top:4px;">成为第一个曝光的人吧</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = posts.map(post => renderPostCard(post)).join('');
+}
+
+function renderPostCard(post) {
+  const tagName = getTagName(post.scamType);
+  const tagStyle = getTagStyle(post.scamType);
+  const likeCount = post.likes.length;
+  const commentCount = post.comments.length;
+
+  // Evidence
+  let evidenceHtml = '';
+  if (post.evidence && post.evidence.length > 0) {
+    const images = [];
+    const links = [];
+    post.evidence.forEach(url => {
+      if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(url)) {
+        images.push(url);
+      } else {
+        links.push(url);
+      }
+    });
+    if (images.length > 0) {
+      evidenceHtml += '<div class="evidence-label">证据截图</div><div class="evidence-images">';
+      images.forEach(url => {
+        evidenceHtml += `<img class="evidence-img" src="${escapeHtml(url)}" onclick="event.stopPropagation();openImgPreview('${escapeHtml(url)}')" loading="lazy" onerror="this.style.display='none'">`;
+      });
+      evidenceHtml += '</div>';
+    }
+    if (links.length > 0) {
+      evidenceHtml += '<div class="evidence-label" style="margin-top:6px;">证据链接</div>';
+      links.forEach(url => {
+        evidenceHtml += `<a class="evidence-link" href="${escapeHtml(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${escapeHtml(url)}</a> `;
+      });
+    }
+  }
+
+  const evidenceSection = evidenceHtml ? `<div class="evidence-section">${evidenceHtml}</div>` : '';
+
+  // Comments HTML
+  const commentsHtml = post.comments.map((c, idx) => `
+    <div class="comment-item">
+      <div class="comment-avatar">U</div>
+      <div class="comment-body">
+        <div class="comment-author">匿名用户</div>
+        <div class="comment-text">${escapeHtml(c.text)}</div>
+        <div class="comment-time">${formatTime(c.createdAt)}</div>
+        <div class="comment-actions">
+          <button class="action-btn ${c.likes && c.likes.length > 0 ? 'liked' : ''}" onclick="likeComment(${post.id}, ${idx})">
+            ${icons.like} ${c.likes ? c.likes.length : 0}
+          </button>
+        </div>
+      </div>
+    </div>`).join('');
+
+  return `
+    <div class="post-card" id="post-${post.id}">
+      <div class="post-header">
+        <div class="post-title">${post.pinned ? '<span style="color:var(--gold);margin-right:6px;" title="已置顶">&#128204;</span>' : ''}${escapeHtml(post.title)}</div>
+        <span class="post-badge" style="${tagStyle}">${tagName}</span>
+      </div>
+      ${post.exposedName ? `<div class="post-exposed-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>被曝光者：${escapeHtml(post.exposedName)}</div>` : ''}
+      <div class="post-meta">发布于 ${formatTime(post.createdAt)}</div>
+      <div class="post-description">${escapeHtml(post.description)}</div>
+      ${evidenceSection}
+      <div class="actions-bar">
+        <button class="action-btn ${post.likes && post.likes.length > 0 ? 'liked' : ''}" onclick="likePost(${post.id})">
+          ${icons.like} <span id="like-count-${post.id}">${likeCount}</span>
+        </button>
+        <button class="action-btn" onclick="toggleComments(${post.id})">
+          ${icons.comment} <span id="comment-count-${post.id}">${commentCount}</span>
+        </button>
+      </div>
+      <div class="comments-section" id="comments-${post.id}">
+        <div class="comment-list" id="comment-list-${post.id}">${commentsHtml}</div>
+        <div class="comment-input-row">
+          <input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="写下你的评论..." maxlength="500">
+          <button class="comment-submit" onclick="addComment(${post.id})">发布</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ==================== INTERACTIONS ====================
+function likePost(postId) {
+  const post = appData.posts.find(p => p.id === postId);
+  if (!post) return;
+  if (!post.likes) post.likes = [];
+  // Simple like toggle based on sessionStorage
+  const key = 'liked_post_' + postId;
+  if (sessionStorage.getItem(key)) {
+    post.likes.pop();
+    sessionStorage.removeItem(key);
+  } else {
+    post.likes.push(Date.now());
+    sessionStorage.setItem(key, '1');
+  }
+  saveData(appData);
+  document.getElementById('like-count-' + postId).textContent = post.likes.length;
+  const btn = document.querySelector(`#post-${postId} .action-btn`);
+  if (btn) {
+    if (sessionStorage.getItem(key)) btn.classList.add('liked');
+    else btn.classList.remove('liked');
+  }
+}
+
+function likeComment(postId, commentIdx) {
+  const post = appData.posts.find(p => p.id === postId);
+  if (!post || !post.comments[commentIdx]) return;
+  const comment = post.comments[commentIdx];
+  if (!comment.likes) comment.likes = [];
+  const key = 'liked_comment_' + postId + '_' + commentIdx;
+  if (sessionStorage.getItem(key)) {
+    comment.likes.pop();
+    sessionStorage.removeItem(key);
+  } else {
+    comment.likes.push(Date.now());
+    sessionStorage.setItem(key, '1');
+  }
+  saveData(appData);
+  renderPosts();
+}
+
+function toggleComments(postId) {
+  const section = document.getElementById('comments-' + postId);
+  section.classList.toggle('open');
+  if (section.classList.contains('open')) {
+    document.getElementById('comment-input-' + postId).focus();
+  }
+}
+
+function addComment(postId) {
+  const input = document.getElementById('comment-input-' + postId);
+  const text = input.value.trim();
+  if (!text) return;
+  const post = appData.posts.find(p => p.id === postId);
+  if (!post) return;
+  if (!post.comments) post.comments = [];
+  post.comments.push({
+    text,
+    createdAt: Date.now(),
+    likes: []
+  });
+  saveData(appData);
+  input.value = '';
+  renderPosts();
+  // Re-open comments
+  setTimeout(() => {
+    const section = document.getElementById('comments-' + postId);
+    if (section) section.classList.add('open');
+  }, 50);
+}
+
+// ==================== IMAGE PREVIEW ====================
+function openImgPreview(url) {
+  document.getElementById('imgPreviewSrc').src = url;
+  document.getElementById('imgPreview').style.display = 'flex';
+}
+
+function closeImgPreview() {
+  document.getElementById('imgPreview').style.display = 'none';
+}
+
+// ==================== KEYBOARD ====================
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    if (document.getElementById('adminDeleteConfirm').style.display === 'flex') {
+      closeAdminDeleteConfirm();
+    } else if (document.getElementById('platformModal').style.display === 'flex') {
+      closePlatformModal();
+    } else if (document.getElementById('passwordModal').style.display === 'flex') {
+      closePasswordModal();
+    } else if (document.getElementById('changePasswordModal').style.display === 'flex') {
+      closeChangePasswordModal();
+    } else if (document.getElementById('itemModal').style.display === 'flex') {
+      closeItemModal();
+    } else if (document.getElementById('tagModal').style.display === 'flex') {
+      closeTagModal();
+    } else {
+      closePublishModal();
+      closeImgPreview();
+    }
+  }
+});
+
+// Click outside modals to close
+document.getElementById('publishModal').addEventListener('click', function(e) {
+  if (e.target === this) closePublishModal();
+});
+document.getElementById('passwordModal').addEventListener('click', function(e) {
+  if (e.target === this) closePasswordModal();
+});
+document.getElementById('adminDeleteConfirm').addEventListener('click', function(e) {
+  if (e.target === this) closeAdminDeleteConfirm();
+});
+document.getElementById('changePasswordModal').addEventListener('click', function(e) {
+  if (e.target === this) closeChangePasswordModal();
+});
+
+// ==================== ADMIN ====================
+const PASSWORD_STORAGE_KEY = 'traderwatch_admin_pwd';
+const DEFAULT_PASSWORD = '0713';
+
+function getAdminPassword() {
+  return localStorage.getItem(PASSWORD_STORAGE_KEY) || DEFAULT_PASSWORD;
+}
+
+function setAdminPassword(newPwd) {
+  localStorage.setItem(PASSWORD_STORAGE_KEY, newPwd);
+}
+
+let isAdmin = false;
+let pendingDeleteAction = null;
+
+// Triple-click on logo icon to open admin
+let logoClickCount = 0;
+let logoClickTimer = null;
+document.querySelector('.logo-icon').addEventListener('click', function() {
+  logoClickCount++;
+  if (logoClickCount === 1) {
+    logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 3000);
+  }
+  if (logoClickCount >= 3) {
+    clearTimeout(logoClickTimer);
+    logoClickCount = 0;
+    openPasswordModal();
+  }
+});
+
+function openPasswordModal() {
+  document.getElementById('passwordModal').style.display = 'flex';
+  document.getElementById('adminPasswordInput').value = '';
+  document.getElementById('passwordError').textContent = '';
+  setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
+}
+
+function closePasswordModal() {
+  document.getElementById('passwordModal').style.display = 'none';
+}
+
+function verifyAdminPassword() {
+  const input = document.getElementById('adminPasswordInput').value;
+  if (input === getAdminPassword()) {
+    isAdmin = true;
+    closePasswordModal();
+    enterAdmin();
+  } else {
+    document.getElementById('passwordError').textContent = '密码错误，请重试';
+    document.getElementById('adminPasswordInput').value = '';
+    document.getElementById('adminPasswordInput').focus();
+  }
+}
+
+function openChangePasswordModal() {
+  document.getElementById('changePasswordModal').style.display = 'flex';
+  document.getElementById('oldPassword').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+  document.getElementById('changePwdError').textContent = '';
+  document.getElementById('changePwdSuccess').textContent = '';
+  setTimeout(() => document.getElementById('oldPassword').focus(), 100);
+}
+
+function closeChangePasswordModal() {
+  document.getElementById('changePasswordModal').style.display = 'none';
+}
+
+function submitChangePassword() {
+  const oldPwd = document.getElementById('oldPassword').value;
+  const newPwd = document.getElementById('newPassword').value;
+  const confirmPwd = document.getElementById('confirmPassword').value;
+  const errEl = document.getElementById('changePwdError');
+  const successEl = document.getElementById('changePwdSuccess');
+  errEl.textContent = '';
+  successEl.textContent = '';
+
+  if (!oldPwd || !newPwd || !confirmPwd) {
+    errEl.textContent = '所有字段均为必填';
+    return;
+  }
+  if (oldPwd !== getAdminPassword()) {
+    errEl.textContent = '旧密码不正确';
+    return;
+  }
+  if (newPwd.length < 1) {
+    errEl.textContent = '新密码不能为空';
+    return;
+  }
+  if (newPwd !== confirmPwd) {
+    errEl.textContent = '两次输入的新密码不一致';
+    return;
+  }
+  setAdminPassword(newPwd);
+  successEl.textContent = '密码修改成功';
+  setTimeout(() => closeChangePasswordModal(), 1500);
+}
+
+function enterAdmin() {
+  document.querySelector('.header').style.display = 'none';
+  document.querySelector('.main').style.display = 'none';
+  document.getElementById('platformPage').classList.remove('open');
+  document.getElementById('eaPage').classList.remove('open');
+  document.getElementById('indicatorPage').classList.remove('open');
+  document.getElementById('softwarePage').classList.remove('open');
+  document.getElementById('bottomNav').style.display = 'none';
+  document.getElementById('adminPanel').classList.add('open');
+  switchAdminTab('posts');
+  renderAdminPanel();
+}
+
+function exitAdmin() {
+  isAdmin = false;
+  document.querySelector('.header').style.display = '';
+  document.getElementById('bottomNav').style.display = '';
+  document.getElementById('adminPanel').classList.remove('open');
+  document.getElementById('adminDeleteConfirm').style.display = 'none';
+  pendingDeleteAction = null;
+  if (currentPage === 'home') {
+    document.querySelector('.main').style.display = '';
+    document.getElementById('platformPage').classList.remove('open');
+    document.getElementById('eaPage').classList.remove('open');
+    document.getElementById('indicatorPage').classList.remove('open');
+    document.getElementById('softwarePage').classList.remove('open');
+  } else if (currentPage === 'platforms') {
+    document.querySelector('.main').style.display = 'none';
+    document.getElementById('platformPage').classList.add('open');
+    renderPlatformPage();
+  } else if (currentPage === 'ea') {
+    document.querySelector('.main').style.display = 'none';
+    document.getElementById('eaPage').classList.add('open');
+    renderItemPage('ea');
+  } else if (currentPage === 'indicators') {
+    document.querySelector('.main').style.display = 'none';
+    document.getElementById('indicatorPage').classList.add('open');
+    renderItemPage('indicator');
+  } else if (currentPage === 'software') {
+    document.querySelector('.main').style.display = 'none';
+    document.getElementById('softwarePage').classList.add('open');
+    renderItemPage('software');
+  }
+  renderAll();
+}
+
+function renderAdminPanel() {
+  const posts = [...appData.posts].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return b.createdAt - a.createdAt;
+  });
+
+  if (posts.length === 0) {
+    document.getElementById('adminTableWrap').innerHTML = `
+      <div class="empty-state" style="padding:80px 20px;">
+        <div class="empty-icon">📋</div>
+        <p>暂无帖子</p>
+      </div>`;
+    return;
+  }
+
+  const tagNameMap = {};
+  tagData.forEach(t => { tagNameMap[t.key] = t.name; });
+  const tagStyleMap = {};
+  tagData.forEach(t => { tagStyleMap[t.key] = getTagStyle(t.key); });
+
+  let html = `<table class="admin-table">
+    <thead><tr>
+      <th>帖子</th>
+      <th>被曝光者</th>
+      <th>类型</th>
+      <th>时间</th>
+      <th>点赞</th>
+      <th>评论</th>
+      <th>操作</th>
+    </tr></thead><tbody>`;
+
+  posts.forEach(post => {
+    const commentRows = post.comments.length > 0
+      ? post.comments.map((c, idx) => `
+          <div class="admin-comment-row">
+            <span class="admin-comment-text">${escapeHtml(c.text.length > 40 ? c.text.slice(0, 40) + '...' : c.text)}</span>
+            <button class="admin-comment-del" onclick="confirmDeleteComment(${post.id}, ${idx})" title="删除此评论">✕</button>
+          </div>`).join('')
+      : '<span class="admin-no-comments">暂无评论</span>';
+
+    html += `<tr>
+      <td class="col-title">
+        ${post.pinned ? '<span class="admin-badge-pin">置顶</span>' : ''}
+        <strong>${escapeHtml(post.title)}</strong>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">${escapeHtml(post.description.slice(0, 50))}${post.description.length > 50 ? '...' : ''}</div>
+      </td>
+      <td>
+        <div class="admin-exposed-cell" id="exposed-cell-${post.id}" onclick="startEditExposedName(${post.id})">
+          ${post.exposedName ? escapeHtml(post.exposedName) : '<span style="color:var(--text-muted);">点击设置</span>'}
+          <span class="edit-hint">✎</span>
+        </div>
+      </td>
+      <td class="col-tag"><span class="tag" style="${tagStyleMap[post.scamType] || ''}">${tagNameMap[post.scamType] || post.scamType}</span></td>
+      <td class="col-time">${formatTime(post.createdAt)}</td>
+      <td style="white-space:nowrap;font-size:0.78rem;">${icons.like} ${post.likes.length}</td>
+      <td style="min-width:140px;">${commentRows}</td>
+      <td class="col-actions">
+        <button class="btn btn-sm ${post.pinned ? 'btn-outline' : 'btn-primary'}" style="margin-right:4px;" onclick="togglePinPost(${post.id})">${post.pinned ? '取消置顶' : '置顶'}</button>
+        <button class="btn btn-sm btn-outline" style="color:var(--red);border-color:var(--red);" onclick="confirmDeletePost(${post.id})">删除</button>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('adminTableWrap').innerHTML = html;
+}
+
+function togglePinPost(postId) {
+  const post = appData.posts.find(p => p.id === postId);
+  if (!post) return;
+  post.pinned = !post.pinned;
+  saveData(appData);
+  renderAdminPanel();
+  showToast(post.pinned ? '帖子已置顶' : '已取消置顶');
+}
+
+function confirmDeletePost(postId) {
+  const post = appData.posts.find(p => p.id === postId);
+  if (!post) return;
+  document.getElementById('adminDeleteMsg').innerHTML = `确定要永久删除帖子 <strong>"${escapeHtml(post.title)}"</strong> 及其所有评论吗？此操作不可撤销。`;
+  document.getElementById('adminDeleteConfirm').style.display = 'flex';
+  document.getElementById('adminDeleteConfirmBtn').onclick = function() {
+    appData.posts = appData.posts.filter(p => p.id !== postId);
+    saveData(appData);
+    closeAdminDeleteConfirm();
+    renderAdminPanel();
+    showToast('帖子已删除');
+  };
+}
+
+function confirmDeleteComment(postId, commentIdx) {
+  const post = appData.posts.find(p => p.id === postId);
+  if (!post || !post.comments[commentIdx]) return;
+  const commentText = post.comments[commentIdx].text;
+  document.getElementById('adminDeleteMsg').innerHTML = `确定要删除评论 <strong>"${escapeHtml(commentText.length > 30 ? commentText.slice(0, 30) + '...' : commentText)}"</strong> 吗？`;
+  document.getElementById('adminDeleteConfirm').style.display = 'flex';
+  document.getElementById('adminDeleteConfirmBtn').onclick = function() {
+    post.comments.splice(commentIdx, 1);
+    saveData(appData);
+    closeAdminDeleteConfirm();
+    renderAdminPanel();
+    showToast('评论已删除');
+  };
+}
+
+function closeAdminDeleteConfirm() {
+  document.getElementById('adminDeleteConfirm').style.display = 'none';
+  pendingDeleteAction = null;
+}
+
+// ==================== EXPOSED NAME EDITING ====================
+function startEditExposedName(postId) {
+  const post = appData.posts.find(p => p.id === postId);
+  if (!post) return;
+  const cell = document.getElementById('exposed-cell-' + postId);
+  if (!cell || cell.querySelector('input')) return;
+  const currentName = post.exposedName || '';
+  cell.innerHTML = `<div class="admin-inline-edit">
+    <input type="text" id="exposed-input-${postId}" value="${escapeHtml(currentName)}" placeholder="输入姓名" onkeydown="if(event.key==='Enter')saveExposedName(${postId})">
+    <button onclick="saveExposedName(${postId})">✓</button>
+    <button class="btn-cancel-inline" onclick="cancelEditExposedName(${postId})">✕</button>
+  </div>`;
+  setTimeout(() => {
+    const inp = document.getElementById('exposed-input-' + postId);
+    if (inp) { inp.focus(); inp.select(); }
+  }, 50);
+}
+
+function saveExposedName(postId) {
+  const inp = document.getElementById('exposed-input-' + postId);
+  if (!inp) return;
+  const post = appData.posts.find(p => p.id === postId);
+  if (!post) return;
+  post.exposedName = inp.value.trim();
+  saveData(appData);
+  const cell = document.getElementById('exposed-cell-' + postId);
+  if (cell) {
+    cell.innerHTML = (post.exposedName ? escapeHtml(post.exposedName) : '<span style="color:var(--text-muted);">点击设置</span>') + '<span class="edit-hint">✎</span>';
+  }
+  showToast('被曝光者已更新');
+}
+
+function cancelEditExposedName(postId) {
+  const post = appData.posts.find(p => p.id === postId);
+  if (!post) return;
+  const cell = document.getElementById('exposed-cell-' + postId);
+  if (cell) {
+    cell.innerHTML = (post.exposedName ? escapeHtml(post.exposedName) : '<span style="color:var(--text-muted);">点击设置</span>') + '<span class="edit-hint">✎</span>';
+  }
+}
+
+// ==================== PAGE SWITCHING ====================
+let currentPage = 'home';
+
+function switchPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
+  const navItem = document.querySelector(`.bottom-nav-item[data-page="${page}"]`);
+  if (navItem) navItem.classList.add('active');
+
+  const main = document.querySelector('.main');
+  const platformPage = document.getElementById('platformPage');
+  const header = document.querySelector('.header');
+
+  // Hide all sub pages
+  platformPage.classList.remove('open');
+  document.getElementById('eaPage').classList.remove('open');
+  document.getElementById('indicatorPage').classList.remove('open');
+  document.getElementById('softwarePage').classList.remove('open');
+
+  if (page === 'home') {
+    header.style.display = '';
+    main.style.display = '';
+    document.getElementById('bottomNav').style.display = '';
+    renderAll();
+  } else if (page === 'platforms') {
+    header.style.display = '';
+    main.style.display = 'none';
+    platformPage.classList.add('open');
+    document.getElementById('bottomNav').style.display = '';
+    renderPlatformPage();
+  } else if (page === 'ea') {
+    header.style.display = '';
+    main.style.display = 'none';
+    document.getElementById('eaPage').classList.add('open');
+    document.getElementById('bottomNav').style.display = '';
+    renderItemPage('ea');
+  } else if (page === 'indicators') {
+    header.style.display = '';
+    main.style.display = 'none';
+    document.getElementById('indicatorPage').classList.add('open');
+    document.getElementById('bottomNav').style.display = '';
+    renderItemPage('indicator');
+  } else if (page === 'software') {
+    header.style.display = '';
+    main.style.display = 'none';
+    document.getElementById('softwarePage').classList.add('open');
+    document.getElementById('bottomNav').style.display = '';
+    renderItemPage('software');
+  }
+}
+
+// ==================== PLATFORM DATA ====================
+const PLATFORM_STORAGE_KEY = 'traderwatch_platforms';
+const CRYPTO_PLATFORM_STORAGE_KEY = 'traderwatch_crypto_platforms';
+
+function loadPlatforms() {
+  try {
+    const raw = localStorage.getItem(PLATFORM_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return [];
+}
+
+function savePlatforms(platforms) {
+  try {
+    localStorage.setItem(PLATFORM_STORAGE_KEY, JSON.stringify(platforms));
+  } catch(e) {
+    showToast('存储空间不足');
+  }
+}
+
+function loadCryptoPlatforms() {
+  try {
+    const raw = localStorage.getItem(CRYPTO_PLATFORM_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return [];
+}
+
+function saveCryptoPlatforms(platforms) {
+  try {
+    localStorage.setItem(CRYPTO_PLATFORM_STORAGE_KEY, JSON.stringify(platforms));
+  } catch(e) {
+    showToast('存储空间不足');
+  }
+}
+
+let platformData = loadPlatforms();
+let platformNextId = platformData.length > 0 ? Math.max(...platformData.map(p => p.id)) + 1 : 1;
+
+function genPlatformId() {
+  return platformNextId++;
+}
+
+let cryptoPlatformData = loadCryptoPlatforms();
+let cryptoPlatformNextId = cryptoPlatformData.length > 0 ? Math.max(...cryptoPlatformData.map(p => p.id)) + 1 : 1;
+
+function genCryptoPlatformId() {
+  return cryptoPlatformNextId++;
+}
+
+// ==================== PLATFORM PAGE RENDER ====================
+let currentPlatformTab = 'forex';
+
+function switchPlatformTab(tab) {
+  currentPlatformTab = tab;
+  document.querySelectorAll('.platform-subtab').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.platform-subtab[data-ptab="${tab}"]`).classList.add('active');
+  renderPlatformTab();
+}
+
+function renderPlatformTab() {
+  if (currentPlatformTab === 'forex') {
+    document.getElementById('platformGrid').style.display = '';
+    document.getElementById('cryptoGrid').style.display = 'none';
+    document.getElementById('platformCount').textContent = platformData.length + ' 个平台';
+    renderGrid('platformGrid', platformData);
+  } else {
+    document.getElementById('platformGrid').style.display = 'none';
+    document.getElementById('cryptoGrid').style.display = '';
+    document.getElementById('platformCount').textContent = cryptoPlatformData.length + ' 个平台';
+    renderGrid('cryptoGrid', cryptoPlatformData);
+  }
+}
+
+function renderGrid(gridId, data) {
+  const grid = document.getElementById(gridId);
+  if (data.length === 0) {
+    grid.innerHTML = `<div class="platform-empty">
+      <div class="empty-icon" style="font-size:2.5rem;opacity:0.4;">📊</div>
+      <p style="margin-top:8px;">暂无平台信息</p>
+      <p style="font-size:0.72rem;color:var(--text-muted);">请联系管理员添加平台</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = data.map(p => {
+    const initial = p.name.charAt(0).toUpperCase();
+    return `<a class="platform-card" href="${escapeHtml(p.url)}" target="_blank" rel="noopener">
+      <div class="platform-card-icon">${initial}</div>
+      <div class="platform-card-name">${escapeHtml(p.name)}</div>
+    </a>`;
+  }).join('');
+}
+
+function renderPlatformPage() {
+  document.querySelector('.platform-subtab[data-ptab="forex"]').classList.add('active');
+  document.querySelector('.platform-subtab[data-ptab="crypto"]').classList.remove('active');
+  currentPlatformTab = 'forex';
+  document.getElementById('platformGrid').style.display = '';
+  document.getElementById('cryptoGrid').style.display = 'none';
+  document.getElementById('platformCount').textContent = platformData.length + ' 个平台';
+  renderGrid('platformGrid', platformData);
+}
+
+// ==================== ADMIN PLATFORM MANAGEMENT ====================
+function switchAdminTab(tab) {
+  document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.admin-tab[data-tab="${tab}"]`).classList.add('active');
+  document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
+  if (tab === 'posts') {
+    document.getElementById('adminTabPosts').classList.add('active');
+  } else if (tab === 'platforms') {
+    document.getElementById('adminTabPlatforms').classList.add('active');
+    switchAdminPlatformTab('forex');
+  } else if (tab === 'tags') {
+    document.getElementById('adminTabTags').classList.add('active');
+    renderAdminTagTable();
+  } else if (tab === 'ea') {
+    document.getElementById('adminTabEA').classList.add('active');
+    renderAdminItemTable('ea');
+  } else if (tab === 'indicators') {
+    document.getElementById('adminTabIndicators').classList.add('active');
+    renderAdminItemTable('indicator');
+  } else if (tab === 'software') {
+    document.getElementById('adminTabSoftware').classList.add('active');
+    renderAdminItemTable('software');
+  } else if (tab === 'suggestions') {
+    document.getElementById('adminTabSuggestions').classList.add('active');
+    renderAdminSuggestions();
+  }
+}
+
+function renderAdminPlatformTable() {
+  const tbody = document.getElementById('adminPlatformTableBody');
+  if (platformData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:40px;color:var(--text-muted);">暂无平台数据</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = platformData.map(p => `
+    <tr>
+      <td>${escapeHtml(p.name)}</td>
+      <td style="font-size:0.78rem;color:var(--text-secondary);word-break:break-all;">${escapeHtml(p.url)}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm btn-outline" style="margin-right:4px;" onclick="editPlatform(${p.id})">编辑</button>
+        <button class="btn btn-sm btn-outline" style="color:var(--red);border-color:var(--red);" onclick="deletePlatform(${p.id})">删除</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function closePlatformModal() {
+  document.getElementById('platformModal').style.display = 'none';
+}
+
+// Close platform modal on overlay click and escape
+document.getElementById('platformModal').addEventListener('click', function(e) {
+  if (e.target === this) closePlatformModal();
+});
+
+// ==================== ADMIN PLATFORM SUB-TAB ====================
+let currentAdminPlatformTab = 'forex';
+
+function switchAdminPlatformTab(tab) {
+  currentAdminPlatformTab = tab;
+  document.querySelectorAll('#adminTabPlatforms .platform-subtab').forEach(el => el.classList.remove('active'));
+  document.querySelector(`#adminTabPlatforms .platform-subtab[data-aptab="${tab}"]`).classList.add('active');
+  if (tab === 'forex') {
+    document.getElementById('adminForexTableWrap').style.display = '';
+    document.getElementById('adminCryptoTableWrap').style.display = 'none';
+    renderAdminPlatformTable();
+  } else {
+    document.getElementById('adminForexTableWrap').style.display = 'none';
+    document.getElementById('adminCryptoTableWrap').style.display = '';
+    renderAdminCryptoPlatformTable();
+  }
+}
+
+// ==================== ADMIN CRYPTO PLATFORM MANAGEMENT ====================
+function renderAdminCryptoPlatformTable() {
+  const tbody = document.getElementById('adminCryptoPlatformTableBody');
+  if (cryptoPlatformData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:40px;color:var(--text-muted);">暂无币圈平台数据</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = cryptoPlatformData.map(p => `
+    <tr>
+      <td>${escapeHtml(p.name)}</td>
+      <td style="font-size:0.78rem;color:var(--text-secondary);word-break:break-all;">${escapeHtml(p.url)}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm btn-outline" style="margin-right:4px;" onclick="editCryptoPlatform(${p.id})">编辑</button>
+        <button class="btn btn-sm btn-outline" style="color:var(--red);border-color:var(--red);" onclick="deleteCryptoPlatform(${p.id})">删除</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openAddCryptoPlatformModal() {
+  document.getElementById('platformModalTitle').textContent = '添加币圈平台';
+  document.getElementById('platformName').value = '';
+  document.getElementById('platformUrl').value = '';
+  document.getElementById('platformEditId').value = '';
+  document.getElementById('platformModal').style.display = 'flex';
+  // Flag to indicate crypto mode
+  document.getElementById('platformModal').dataset.mode = 'crypto';
+  setTimeout(() => document.getElementById('platformName').focus(), 100);
+}
+
+function editCryptoPlatform(id) {
+  const platform = cryptoPlatformData.find(p => p.id === id);
+  if (!platform) return;
+  document.getElementById('platformModalTitle').textContent = '编辑币圈平台';
+  document.getElementById('platformName').value = platform.name;
+  document.getElementById('platformUrl').value = platform.url;
+  document.getElementById('platformEditId').value = id;
+  document.getElementById('platformModal').style.display = 'flex';
+  document.getElementById('platformModal').dataset.mode = 'crypto';
+  setTimeout(() => document.getElementById('platformName').focus(), 100);
+}
+
+// Override savePlatform to handle both modes
+function savePlatform() {
+  const name = document.getElementById('platformName').value.trim();
+  const url = document.getElementById('platformUrl').value.trim();
+  const editId = document.getElementById('platformEditId').value;
+  const mode = document.getElementById('platformModal').dataset.mode || 'forex';
+  if (!name || !url) {
+    showToast('请填写平台名称和网址');
+    return;
+  }
+  if (!/^https?:\/\//i.test(url)) {
+    showToast('网址需以 http:// 或 https:// 开头');
+    return;
+  }
+  if (mode === 'crypto') {
+    if (editId) {
+      const p = cryptoPlatformData.find(c => c.id === parseInt(editId));
+      if (p) { p.name = name; p.url = url; }
+    } else {
+      cryptoPlatformData.push({ id: genCryptoPlatformId(), name, url });
+    }
+    saveCryptoPlatforms(cryptoPlatformData);
+    closePlatformModal();
+    renderAdminCryptoPlatformTable();
+    if (currentPage === 'platforms' && currentPlatformTab === 'crypto') renderPlatformTab();
+    showToast(editId ? '币圈平台已更新' : '币圈平台已添加');
+  } else {
+    if (editId) {
+      const p = platformData.find(f => f.id === parseInt(editId));
+      if (p) { p.name = name; p.url = url; }
+    } else {
+      platformData.push({ id: genPlatformId(), name, url });
+    }
+    savePlatforms(platformData);
+    closePlatformModal();
+    renderAdminPlatformTable();
+    if (currentPage === 'platforms' && currentPlatformTab === 'forex') renderPlatformTab();
+    showToast(editId ? '平台已更新' : '平台已添加');
+  }
+  document.getElementById('platformModal').dataset.mode = '';
+}
+
+function deleteCryptoPlatform(id) {
+  const platform = cryptoPlatformData.find(p => p.id === id);
+  if (!platform) return;
+  document.getElementById('adminDeleteMsg').innerHTML = `确定要删除币圈平台 <strong>"${escapeHtml(platform.name)}"</strong> 吗？`;
+  document.getElementById('adminDeleteConfirm').style.display = 'flex';
+  document.getElementById('adminDeleteConfirmBtn').onclick = function() {
+    cryptoPlatformData = cryptoPlatformData.filter(p => p.id !== id);
+    saveCryptoPlatforms(cryptoPlatformData);
+    closeAdminDeleteConfirm();
+    renderAdminCryptoPlatformTable();
+    if (currentPage === 'platforms' && currentPlatformTab === 'crypto') renderPlatformTab();
+    showToast('币圈平台已删除');
+  };
+}
+
+// Update forex platform functions
+function openAddPlatformModal() {
+  document.getElementById('platformModalTitle').textContent = '添加外汇平台';
+  document.getElementById('platformName').value = '';
+  document.getElementById('platformUrl').value = '';
+  document.getElementById('platformEditId').value = '';
+  document.getElementById('platformModal').style.display = 'flex';
+  document.getElementById('platformModal').dataset.mode = 'forex';
+  setTimeout(() => document.getElementById('platformName').focus(), 100);
+}
+
+function editPlatform(id) {
+  const platform = platformData.find(p => p.id === id);
+  if (!platform) return;
+  document.getElementById('platformModalTitle').textContent = '编辑外汇平台';
+  document.getElementById('platformName').value = platform.name;
+  document.getElementById('platformUrl').value = platform.url;
+  document.getElementById('platformEditId').value = id;
+  document.getElementById('platformModal').style.display = 'flex';
+  document.getElementById('platformModal').dataset.mode = 'forex';
+  setTimeout(() => document.getElementById('platformName').focus(), 100);
+}
+
+function deletePlatform(id) {
+  const platform = platformData.find(p => p.id === id);
+  if (!platform) return;
+  document.getElementById('adminDeleteMsg').innerHTML = `确定要删除外汇平台 <strong>"${escapeHtml(platform.name)}"</strong> 吗？`;
+  document.getElementById('adminDeleteConfirm').style.display = 'flex';
+  document.getElementById('adminDeleteConfirmBtn').onclick = function() {
+    platformData = platformData.filter(p => p.id !== id);
+    savePlatforms(platformData);
+    closeAdminDeleteConfirm();
+    renderAdminPlatformTable();
+    if (currentPage === 'platforms' && currentPlatformTab === 'forex') renderPlatformTab();
+    showToast('外汇平台已删除');
+  };
+}
+
+// ==================== EA / 指标 / 软件下载 MANAGEMENT ====================
+const ITEM_STORAGE_KEYS = {
+  ea: 'traderwatch_ea',
+  indicator: 'traderwatch_indicators',
+  software: 'traderwatch_software'
+};
+
+const ITEM_GRID_IDS = {
+  ea: 'eaGrid',
+  indicator: 'indicatorGrid',
+  software: 'softwareGrid'
+};
+
+const ITEM_COUNT_IDS = {
+  ea: 'eaCount',
+  indicator: 'indicatorCount',
+  software: 'softwareCount'
+};
+
+const ITEM_ADMIN_TABLE_IDS = {
+  ea: 'adminEATableBody',
+  indicator: 'adminIndicatorTableBody',
+  software: 'adminSoftwareTableBody'
+};
+
+const ITEM_LABELS = {
+  ea: 'EA',
+  indicator: '指标',
+  software: '软件'
+};
+
+function loadItems(type) {
+  try {
+    const raw = localStorage.getItem(ITEM_STORAGE_KEYS[type]);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return [];
+}
+
+function saveItems(type, data) {
+  try {
+    localStorage.setItem(ITEM_STORAGE_KEYS[type], JSON.stringify(data));
+  } catch(e) {
+    showToast('存储空间不足');
+  }
+}
+
+// Data stores
+let eaData = loadItems('ea');
+let indicatorData = loadItems('indicator');
+let softwareData = loadItems('software');
+
+// Next ID tracking
+let eaNextId = eaData.length > 0 ? Math.max(...eaData.map(i => i.id)) + 1 : 1;
+let indicatorNextId = indicatorData.length > 0 ? Math.max(...indicatorData.map(i => i.id)) + 1 : 1;
+let softwareNextId = softwareData.length > 0 ? Math.max(...softwareData.map(i => i.id)) + 1 : 1;
+
+const ITEM_NEXT_IDS = {
+  get ea() { return eaNextId++; },
+  get indicator() { return indicatorNextId++; },
+  get software() { return softwareNextId++; }
+};
+
+function getItemData(type) {
+  if (type === 'ea') return eaData;
+  if (type === 'indicator') return indicatorData;
+  return softwareData;
+}
+
+function saveItemData(type, data) {
+  if (type === 'ea') { eaData = data; saveItems('ea', eaData); }
+  else if (type === 'indicator') { indicatorData = data; saveItems('indicator', indicatorData); }
+  else { softwareData = data; saveItems('software', softwareData); }
+}
+
+// ==================== ITEM PAGE RENDER ====================
+function renderItemPage(type) {
+  const data = getItemData(type);
+  const grid = document.getElementById(ITEM_GRID_IDS[type]);
+  const countEl = document.getElementById(ITEM_COUNT_IDS[type]);
+  countEl.textContent = data.length + ' 个';
+
+  if (data.length === 0) {
+    grid.innerHTML = `<div class="download-empty">
+      <p>暂无${ITEM_LABELS[type]}资源</p>
+      <p style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">请联系管理员添加</p>
+    </div>`;
+    return;
+  }
+
+  const purchased = getPurchasedItems(type);
+
+  grid.innerHTML = data.map(item => {
+    const initial = item.name.charAt(0).toUpperCase();
+    const isFree = !item.price || item.price <= 0;
+    const hasFile = !!(item.file);
+    const hasUrl = !!(item.url);
+    const isPurchased = !isFree && purchased.has(item.id);
+
+    let btnHtml = '';
+    if (isFree) {
+      if (hasUrl && !hasFile) {
+        btnHtml = `<a class="download-card-btn" href="${escapeHtml(item.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          免费下载
+        </a>`;
+      } else {
+        btnHtml = `<button class="download-card-buy-btn" onclick="event.stopPropagation();triggerItemDownload('${type}',${item.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          免费下载
+        </button>`;
+      }
+    } else if (isPurchased) {
+      btnHtml = `<button class="download-card-buy-btn purchased" onclick="event.stopPropagation();triggerItemDownload('${type}',${item.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        下载
+      </button>`;
+    } else {
+      btnHtml = `<button class="download-card-buy-btn" onclick="event.stopPropagation();handleItemPayment('${type}',${item.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        购买下载
+      </button>`;
+    }
+
+    return `<div class="download-card">
+      <div class="download-card-header">
+        <div class="download-card-icon">${initial}</div>
+        <div class="download-card-name">${escapeHtml(item.name)}</div>
+      </div>
+      ${item.description ? `<div class="download-card-desc">${escapeHtml(item.description)}</div>` : ''}
+      <div class="download-card-price${isFree ? ' free' : ''}">${isFree ? '免费' : '¥' + item.price.toFixed(2)}</div>
+      ${btnHtml}
+    </div>`;
+  }).join('');
+}
+
+// ==================== ADMIN ITEM TABLE ====================
+function renderAdminItemTable(type) {
+  const data = getItemData(type);
+  const tbody = document.getElementById(ITEM_ADMIN_TABLE_IDS[type]);
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">暂无${ITEM_LABELS[type]}数据</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(item => `
+    <tr>
+      <td>${escapeHtml(item.name)}</td>
+      <td class="item-admin-desc">${escapeHtml(item.description || '—')}</td>
+      <td>${item.price > 0 ? '¥' + item.price.toFixed(2) : '<span style="color:var(--success);">免费</span>'}</td>
+      <td style="font-size:0.72rem;color:var(--text-secondary);word-break:break-all;">${escapeHtml(item.url || (item.file ? '本地文件: ' + (item.fileName || '—') : '—'))}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm btn-outline" style="margin-right:4px;" onclick="editItem('${type}',${item.id})">编辑</button>
+        <button class="btn btn-sm btn-outline" style="color:var(--red);border-color:var(--red);" onclick="deleteItem('${type}',${item.id})">删除</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ==================== ITEM MODAL ====================
+function openAddItemModal(type) {
+  document.getElementById('itemModalTitle').textContent = '添加' + ITEM_LABELS[type];
+  document.getElementById('itemName').value = '';
+  document.getElementById('itemDesc').value = '';
+  document.getElementById('itemPrice').value = '0';
+  document.getElementById('itemUrl').value = '';
+  document.getElementById('itemEditId').value = '';
+  document.getElementById('itemType').value = type;
+  document.getElementById('itemFileInput').value = '';
+  document.getElementById('itemFileData').value = '';
+  document.getElementById('itemFileName').textContent = '';
+  document.getElementById('itemModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('itemName').focus(), 100);
+}
+
+function editItem(type, id) {
+  const data = getItemData(type);
+  const item = data.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('itemModalTitle').textContent = '编辑' + ITEM_LABELS[type];
+  document.getElementById('itemName').value = item.name;
+  document.getElementById('itemDesc').value = item.description || '';
+  document.getElementById('itemPrice').value = item.price || 0;
+  document.getElementById('itemUrl').value = item.url || '';
+  document.getElementById('itemFileInput').value = '';
+  document.getElementById('itemFileData').value = item.file || '';
+  document.getElementById('itemFileName').textContent = item.fileName || (item.file ? '(已有文件)' : '');
+  document.getElementById('itemEditId').value = id;
+  document.getElementById('itemType').value = type;
+  document.getElementById('itemModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('itemName').focus(), 100);
+}
+
+function closeItemModal() {
+  document.getElementById('itemModal').style.display = 'none';
+}
+
+function saveItem() {
+  const type = document.getElementById('itemType').value;
+  const name = document.getElementById('itemName').value.trim();
+  const description = document.getElementById('itemDesc').value.trim();
+  const price = parseFloat(document.getElementById('itemPrice').value) || 0;
+  const url = document.getElementById('itemUrl').value.trim();
+  const fileData = document.getElementById('itemFileData').value;
+  const editId = document.getElementById('itemEditId').value;
+
+  if (!name) {
+    showToast('请填写名称');
+    return;
+  }
+  if (!url && !fileData) {
+    showToast('请填写下载链接或上传本地文件');
+    return;
+  }
+  if (url && !/^https?:\/\//i.test(url)) {
+    showToast('下载链接需以 http:// 或 https:// 开头');
+    return;
+  }
+
+  const itemFileName = document.getElementById('itemFileName').textContent;
+  const data = getItemData(type);
+  if (editId) {
+    const item = data.find(i => i.id === parseInt(editId));
+    if (item) {
+      item.name = name;
+      item.description = description;
+      item.price = price;
+      item.url = url;
+      if (fileData) {
+        item.file = fileData;
+        item.fileName = itemFileName;
+      } else if (!url && item.file) {
+        // keep existing file if no url and no new file
+      } else if (url && !fileData) {
+        item.file = '';
+        item.fileName = '';
+      }
+    }
+  } else {
+    data.push({ id: ITEM_NEXT_IDS[type], name, description, price, url, file: fileData, fileName: itemFileName });
+  }
+  saveItemData(type, data);
+  closeItemModal();
+  renderAdminItemTable(type);
+  if (currentPage === type || currentPage === 'indicators') {
+    const pageType = currentPage === 'indicators' ? 'indicator' : currentPage;
+    if (pageType === type) renderItemPage(type);
+  }
+  showToast(editId ? ITEM_LABELS[type] + '已更新' : ITEM_LABELS[type] + '已添加');
+}
+
+function deleteItem(type, id) {
+  const data = getItemData(type);
+  const item = data.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('adminDeleteMsg').innerHTML = `确定要删除${ITEM_LABELS[type]} <strong>"${escapeHtml(item.name)}"</strong> 吗？`;
+  document.getElementById('adminDeleteConfirm').style.display = 'flex';
+  document.getElementById('adminDeleteConfirmBtn').onclick = function() {
+    const newData = data.filter(i => i.id !== id);
+    saveItemData(type, newData);
+    closeAdminDeleteConfirm();
+    renderAdminItemTable(type);
+    const pageType = currentPage === 'indicators' ? 'indicator' : currentPage;
+    if (pageType === type) renderItemPage(type);
+    showToast(ITEM_LABELS[type] + '已删除');
+  };
+}
+
+// ==================== ITEM FILE HANDLING ====================
+function handleItemFileChange(input) {
+  const file = input.files[0];
+  if (!file) {
+    document.getElementById('itemFileData').value = '';
+    document.getElementById('itemFileName').textContent = '';
+    return;
+  }
+
+  const MAX_SIZE_MB = 3;
+  if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+    showToast(`文件大小 ${(file.size / 1024 / 1024).toFixed(1)}MB，超过建议的 ${MAX_SIZE_MB}MB（localStorage 总限制约 5MB），可能导致存储失败`, 5000);
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('itemFileData').value = e.target.result;
+    document.getElementById('itemFileName').textContent = file.name + ' (' + formatFileSize(file.size) + ')';
+  };
+  reader.onerror = function() {
+    showToast('文件读取失败');
+    document.getElementById('itemFileData').value = '';
+    document.getElementById('itemFileName').textContent = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+}
+
+// ==================== ITEM DOWNLOAD ====================
+function triggerItemDownload(type, id) {
+  const data = getItemData(type);
+  const item = data.find(i => i.id === id);
+  if (!item || !item.file) {
+    showToast('该条目无可下载的本地文件');
+    return;
+  }
+
+  try {
+    const base64 = item.file;
+    let mimeType = 'application/octet-stream';
+    let byteChars = '';
+
+    // Extract MIME type and actual base64 data
+    if (base64.startsWith('data:')) {
+      const commaIdx = base64.indexOf(',');
+      const header = base64.substring(0, commaIdx);
+      const mimeMatch = header.match(/data:([^;]*)/);
+      if (mimeMatch) mimeType = mimeMatch[1];
+      byteChars = base64.substring(commaIdx + 1);
+    } else {
+      byteChars = base64;
+    }
+
+    const byteNumbers = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      byteNumbers[i] = byteChars.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = item.fileName || item.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    showToast('下载失败: ' + e.message);
+  }
+}
+
+// ==================== ITEM PAYMENT ====================
+function handleItemPayment(type, id) {
+  const data = getItemData(type);
+  const item = data.find(i => i.id === id);
+  if (!item) return;
+
+  document.getElementById('paymentModalTitle').textContent = '购买 ' + escapeHtml(item.name);
+  document.getElementById('paymentModalPrice').textContent = '¥' + item.price.toFixed(2);
+  document.getElementById('paymentModal').style.display = 'flex';
+  document.getElementById('paymentConfirmBtn').onclick = function() {
+    markAsPurchased(type, id);
+    closePaymentModal();
+    renderItemPage(type);
+    showToast('已确认购买，请点击下载按钮');
+  };
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentModal').style.display = 'none';
+}
+
+// Payment modal overlay click
+document.getElementById('paymentModal').addEventListener('click', function(e) {
+  if (e.target === this) closePaymentModal();
+});
+
+// ==================== PURCHASE STORAGE ====================
+const PURCHASED_KEY = 'traderwatch_purchased';
+
+function getPurchasedItems(type) {
+  try {
+    const raw = localStorage.getItem(PURCHASED_KEY);
+    if (raw) {
+      const all = JSON.parse(raw);
+      return new Set(all[type] || []);
+    }
+  } catch(e) {}
+  return new Set();
+}
+
+function markAsPurchased(type, id) {
+  try {
+    const raw = localStorage.getItem(PURCHASED_KEY);
+    const all = raw ? JSON.parse(raw) : {};
+    if (!all[type]) all[type] = [];
+    if (!all[type].includes(id)) all[type].push(id);
+    localStorage.setItem(PURCHASED_KEY, JSON.stringify(all));
+  } catch(e) {
+    showToast('存储购买状态失败');
+  }
+}
+
+// Close item modal on overlay click and escape
+document.getElementById('itemModal').addEventListener('click', function(e) {
+  if (e.target === this) closeItemModal();
+});
+
+// ==================== TAG MANAGEMENT (ADMIN) ====================
+function populateTagSelect() {
+  const select = document.getElementById('postScamType');
+  const val = select.value;
+  select.innerHTML = '<option value="">请选择标签</option>' +
+    tagData.map(t => `<option value="${t.key}">${t.name}</option>`).join('');
+  select.value = val;
+}
+
+function renderAdminTagTable() {
+  const tbody = document.getElementById('adminTagTableBody');
+  if (tagData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:40px;color:var(--text-muted);">暂无标签</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = tagData.map((t, idx) => {
+    const count = getTagUsageCount(t.key);
+    return `<tr>
+      <td><span class="tag" style="${getTagStyle(t.key)}">${t.name}</span></td>
+      <td style="color:var(--text-secondary);">${count} 个帖子</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm btn-outline" style="margin-right:4px;" onclick="editTag('${t.key}')">编辑</button>
+        <button class="btn btn-sm btn-outline" style="color:var(--red);border-color:var(--red);" onclick="deleteTag('${t.key}')">删除</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openTagModal(editKey) {
+  if (editKey) {
+    const tag = tagData.find(t => t.key === editKey);
+    if (!tag) return;
+    document.getElementById('tagModalTitle').textContent = '编辑标签';
+    document.getElementById('tagNameInput').value = tag.name;
+    document.getElementById('tagEditKey').value = editKey;
+  } else {
+    document.getElementById('tagModalTitle').textContent = '添加标签';
+    document.getElementById('tagNameInput').value = '';
+    document.getElementById('tagEditKey').value = '';
+  }
+  document.getElementById('tagModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('tagNameInput').focus(), 100);
+}
+
+function editTag(key) { openTagModal(key); }
+
+function closeTagModal() {
+  document.getElementById('tagModal').style.display = 'none';
+}
+
+function saveTag() {
+  const name = document.getElementById('tagNameInput').value.trim();
+  const editKey = document.getElementById('tagEditKey').value.trim();
+
+  if (!name) {
+    showToast('请输入标签名称');
+    return;
+  }
+
+  // Check duplicate name
+  const dup = tagData.find(t => t.name === name && t.key !== editKey);
+  if (dup) {
+    showToast('标签名称已存在');
+    return;
+  }
+
+  if (editKey) {
+    // Editing: update name
+    const tag = tagData.find(t => t.key === editKey);
+    if (tag) {
+      tag.name = name;
+    }
+  } else {
+    // Adding new
+    const key = genTagKey(name);
+    tagData.push({ key, name });
+  }
+
+  saveTags(tagData);
+  closeTagModal();
+  populateTagSelect();
+  renderAdminTagTable();
+  // Refresh UI if visible
+  if (currentPage === 'home') renderAll();
+  showToast(editKey ? '标签已更新' : '标签已添加');
+}
+
+function deleteTag(key) {
+  const tag = tagData.find(t => t.key === key);
+  if (!tag) return;
+
+  const count = getTagUsageCount(key);
+  let msg = `确定要删除标签 <strong>"${escapeHtml(tag.name)}"</strong> 吗？`;
+  if (count > 0) {
+    msg += `<br><br><span style="color:var(--accent);">⚠ 该标签已被 ${count} 个帖子使用，删除后帖子标签将显示为原始标识符。</span>`;
+  }
+
+  document.getElementById('adminDeleteMsg').innerHTML = msg;
+  document.getElementById('adminDeleteConfirm').style.display = 'flex';
+  document.getElementById('adminDeleteConfirmBtn').onclick = function() {
+    tagData = tagData.filter(t => t.key !== key);
+    saveTags(tagData);
+    closeAdminDeleteConfirm();
+    populateTagSelect();
+    renderAdminTagTable();
+    if (currentPage === 'home') renderAll();
+    showToast('标签已删除');
+  };
+}
+
+// Close tag modal on overlay click and escape
+document.getElementById('tagModal').addEventListener('click', function(e) {
+  if (e.target === this) closeTagModal();
+});
+
+// ==================== SUGGESTION MANAGEMENT ====================
+const SUGGESTION_STORAGE_KEY = 'traderwatch_suggestions';
+const USER_ID_KEY = 'traderwatch_user_id';
+
+function getUserId() {
+  let uid = localStorage.getItem(USER_ID_KEY);
+  if (!uid) {
+    uid = 'user_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    localStorage.setItem(USER_ID_KEY, uid);
+  }
+  return uid;
+}
+
+function loadSuggestions() {
+  try {
+    const raw = localStorage.getItem(SUGGESTION_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return [];
+}
+
+function saveSuggestions(data) {
+  localStorage.setItem(SUGGESTION_STORAGE_KEY, JSON.stringify(data));
+}
+
+function submitSuggestion() {
+  const text = document.getElementById('suggestionText').value.trim();
+  if (!text) {
+    showToast('请输入建议内容');
+    return;
+  }
+  const suggestions = loadSuggestions();
+  suggestions.push({
+    id: Date.now(),
+    userId: getUserId(),
+    text: text,
+    createdAt: Date.now()
+  });
+  saveSuggestions(suggestions);
+  document.getElementById('suggestionText').value = '';
+  closeSuggestionModal();
+  showToast('已收到，感谢反馈');
+}
+
+function openSuggestionModal() {
+  document.getElementById('suggestionModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('suggestionText').focus(), 100);
+}
+
+function closeSuggestionModal() {
+  document.getElementById('suggestionModal').style.display = 'none';
+}
+
+// Close suggestion modal on overlay click
+document.getElementById('suggestionModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSuggestionModal();
+});
+
+function renderAdminSuggestions() {
+  const suggestions = loadSuggestions();
+  const wrap = document.getElementById('adminSuggestionsTableWrap');
+  if (!wrap) {
+    console.error('[renderAdminSuggestions] 找不到 adminSuggestionsTableWrap 元素');
+    return;
+  }
+  if (suggestions.length === 0) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:80px 20px;">
+      <div class="empty-icon">📋</div>
+      <p>暂无建议</p>
+    </div>`;
+    return;
+  }
+  let html = `<table class="admin-table">
+    <thead><tr>
+      <th>提交时间</th>
+      <th>用户ID</th>
+      <th>建议内容</th>
+      <th style="width:100px;">操作</th>
+    </tr></thead><tbody>`;
+  suggestions.sort((a, b) => b.createdAt - a.createdAt).forEach(s => {
+    const safeText = (s.text && typeof s.text === 'string') ? s.text : '(空)';
+    html += `<tr>
+      <td class="col-time">${formatTime(s.createdAt)}</td>
+      <td style="font-size:0.72rem;color:var(--text-muted);">${escapeHtml(String(s.userId || '未知'))}</td>
+      <td style="font-size:0.85rem;">${escapeHtml(safeText.length > 60 ? safeText.slice(0, 60) + '...' : safeText)}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm btn-outline" style="color:var(--red);border-color:var(--red);" onclick="deleteSuggestion(${s.id})">删除</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function deleteSuggestion(id) {
+  try {
+    const suggestions = loadSuggestions();
+    const s = suggestions.find(i => i.id === id);
+    if (!s) {
+      console.warn('[deleteSuggestion] 未找到 ID 为', id, '的建议，当前建议列表:', suggestions);
+      showToast('该建议已不存在，请刷新列表');
+      renderAdminSuggestions();
+      return;
+    }
+    const msgEl = document.getElementById('adminDeleteMsg');
+    const confirmEl = document.getElementById('adminDeleteConfirm');
+    const btnEl = document.getElementById('adminDeleteConfirmBtn');
+    if (!msgEl || !confirmEl || !btnEl) {
+      console.error('[deleteSuggestion] 找不到确认弹窗 DOM 元素');
+      showToast('操作失败，请刷新页面后重试');
+      return;
+    }
+    msgEl.innerHTML = `确定要删除这条建议吗？<br><br><span style="font-size:0.85rem;color:var(--text-secondary);">"${escapeHtml(s.text.length > 80 ? s.text.slice(0, 80) + '...' : s.text)}"</span>`;
+    confirmEl.style.display = 'flex';
+    btnEl.onclick = function() {
+      saveSuggestions(suggestions.filter(i => i.id !== id));
+      closeAdminDeleteConfirm();
+      renderAdminSuggestions();
+      showToast('建议已删除');
+    };
+  } catch(e) {
+    console.error('[deleteSuggestion] 执行出错:', e);
+    showToast('删除失败，请重试');
+  }
+}
+
+// ==================== INIT ====================
+populateTagSelect();
+renderAll();
+console.log('[TraderWatch] JS initialized successfully — all functions loaded');
+</script>
+</body>
+</html>
