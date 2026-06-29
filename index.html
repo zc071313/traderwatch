@@ -2722,10 +2722,11 @@ function setAdminPassword(newPwd) {
 let isAdmin = false;
 let pendingDeleteAction = null;
 
-// Triple-click on logo icon to open admin
+// Click logo icon → return home; triple-click (within 3s) → admin password
 let logoClickCount = 0;
 let logoClickTimer = null;
 document.querySelector('.logo-icon').addEventListener('click', function() {
+  switchPage('home');
   logoClickCount++;
   if (logoClickCount === 1) {
     logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 3000);
@@ -2735,6 +2736,11 @@ document.querySelector('.logo-icon').addEventListener('click', function() {
     logoClickCount = 0;
     openPasswordModal();
   }
+});
+
+// Click logo text → return home
+document.querySelector('.logo-text span').addEventListener('click', function() {
+  switchPage('home');
 });
 
 function openPasswordModal() {
