@@ -1817,12 +1817,9 @@ body {
 }
 .kline-expand iframe {
   width: 100%;
-  height: calc(100vh - 160px);
+  height: calc(100vh - 100px);
   border: none;
   display: block;
-}
-.kline-expand {
-  padding-bottom: 70px;
 }
 
 /* Mobile responsive */
@@ -3271,8 +3268,6 @@ function switchPage(page) {
   const navItem = document.querySelector(`.bottom-nav-item[data-page="${page}"]`);
   if (navItem) navItem.classList.add('active');
 
-  var klineOpen = document.getElementById('klineExpand') && document.getElementById('klineExpand').style.display !== 'none';
-
   const main = document.querySelector('.main');
   const platformPage = document.getElementById('platformPage');
   const header = document.querySelector('.header');
@@ -3290,25 +3285,25 @@ function switchPage(page) {
     renderAll();
   } else if (page === 'platforms') {
     header.style.display = '';
-    main.style.display = klineOpen ? '' : 'none';
+    main.style.display = 'none';
     platformPage.classList.add('open');
     document.getElementById('bottomNav').style.display = '';
     renderPlatformPage();
   } else if (page === 'ea') {
     header.style.display = '';
-    main.style.display = klineOpen ? '' : 'none';
+    main.style.display = 'none';
     document.getElementById('eaPage').classList.add('open');
     document.getElementById('bottomNav').style.display = '';
     renderItemPage('ea');
   } else if (page === 'indicators') {
     header.style.display = '';
-    main.style.display = klineOpen ? '' : 'none';
+    main.style.display = 'none';
     document.getElementById('indicatorPage').classList.add('open');
     document.getElementById('bottomNav').style.display = '';
     renderItemPage('indicator');
   } else if (page === 'software') {
     header.style.display = '';
-    main.style.display = klineOpen ? '' : 'none';
+    main.style.display = 'none';
     document.getElementById('softwarePage').classList.add('open');
     document.getElementById('bottomNav').style.display = '';
     renderItemPage('software');
@@ -4312,13 +4307,11 @@ function openKlineExpand() {
   if (!iframe.src || iframe.src === window.location.href || iframe.src.endsWith('/')) {
     iframe.src = 'https://zc071313.github.io/k-line-trainer/';
   }
-  // Fullscreen mode: hide main content, keep bottom nav visible
-  var ids = ['statsBar', 'filterTags', 'postList'];
+  // Fullscreen mode: hide all page content below header
+  var ids = ['statsBar', 'filterTags', 'postList', 'bottomNav'];
   ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
   var classes = ['.search-bar', '.suggestion-link-wrap'];
   classes.forEach(function(sel) { var el = document.querySelector(sel); if (el) el.style.display = 'none'; });
-  var bottomEl = document.getElementById('bottomNav');
-  if (bottomEl) bottomEl.style.display = '';
   // Scroll to expand area
   setTimeout(function() { area.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
 }
