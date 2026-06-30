@@ -265,6 +265,10 @@ body {
   margin-bottom: 10px;
 }
 
+.expand-arrow { color: var(--text-muted); font-size: 0.6rem; transition: transform 0.2s; flex-shrink:0; }
+.expand-arrow.expanded { transform: rotate(90deg); color: var(--accent); }
+.post-expandable { display: none; }
+.post-expandable.expanded { display: block; }
 .post-title {
   font-size: 1.05rem;
   font-weight: 700;
@@ -2797,14 +2801,18 @@ function renderPostCard(post) {
   return `
     <div class="post-card" id="post-${post.id}">
       <div class="post-header">
-        <div class="post-title">${post.pinned ? '<span style="color:var(--gold);margin-right:6px;" title="已置顶">&#128204;</span>' : ''}${escapeHtml(post.title)}</div>
+        <div class="post-title-wrap" style="display:flex;align-items:center;gap:8px;flex:1;">
+          <span class="expand-arrow" id="expand-arrow-${post.id}">&#9658;</span>
+          ${post.pinned ? '<span style="color:var(--gold);" title="已置顶">&#128204;</span>' : ''}
+          <div class="post-title" style="flex:1;">${escapeHtml(post.title)}</div>
+        </div>
         <span class="post-badge" style="${tagStyle}">${tagName}</span>
       </div>
       ${post.exposedName ? `<div class="post-exposed-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>被曝光者：${escapeHtml(post.exposedName)}</div>` : ''}
       <div class="post-meta">发布于 ${formatTime(post.createdAt)}</div>
-      <div class="post-description">${escapeHtml(post.description)}</div>
-      ${evidenceSection}
-      <div class="actions-bar">
+      <div class="post-description post-expandable" id="post-desc-${post.id}">${escapeHtml(post.description)}</div>
+      <div class="post-expandable" id="post-evidence-${post.id}">${evidenceSection}</div>
+      <div class="actions-bar post-expandable" id="post-actions-${post.id}">
         <button class="action-btn ${post.likes && post.likes.length > 0 ? 'liked' : ''}" onclick="likePost(${post.id})">
           ${icons.like} <span id="like-count-${post.id}">${likeCount}</span>
         </button>
@@ -2812,7 +2820,7 @@ function renderPostCard(post) {
           ${icons.comment} <span id="comment-count-${post.id}">${commentCount}</span>
         </button>
       </div>
-      <div class="comments-section" id="comments-${post.id}">
+      <div class="comments-section post-expandable" id="comments-${post.id}">
         <div class="comment-list" id="comment-list-${post.id}">${commentsHtml}</div>
         <div class="comment-input-row">
           <input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="写下你的评论..." maxlength="500">
@@ -2821,6 +2829,17 @@ function renderPostCard(post) {
       </div>
     </div>`;
 }
+function togglePostExpand(postId){
+    var el=document.getElementById('post-desc-'+postId);
+    var ev=document.getElementById('post-evidence-'+postId);
+    var act=document.getElementById('post-actions-'+postId);
+    var cmts=document.getElementById('comments-'+postId);
+    var arrow=document.getElementById('expand-arrow-'+postId);
+    var isExp=el&&el.classList.contains('expanded');
+    [el,ev,act,cmts].forEach(function(x){if(x){isExp?x.classList.remove('expanded'):x.classList.add('expanded');}});
+    if(arrow){isExp?arrow.classList.remove('expanded'):arrow.classList.add('expanded');}
+}
+
 
 // ==================== INTERACTIONS ====================
 function likePost(postId) {
