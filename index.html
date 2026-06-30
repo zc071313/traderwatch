@@ -1,8 +1,8 @@
 <!DOCTY
   <div style="margin-top:12px;">
-    <label style="display:block;font-size:0.78rem;color:var(--text-secondary);margin-bottom:4px;">GitHub PAT (optional, for cross-device sync)</label>
-    <input type="password" id="ghTokenInput" class="form-input" placeholder="your_pat_here" style="font-size:0.85rem;" onkeydown="if(event.key=='Enter'){var t=document.getElementById('ghTokenInput').value.trim();if(t){localStorage.setItem(GITHUB_TOKEN_KEY,t);showToast('GitHub token saved!');}}">
-    <div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Required for publishing. Get one at github.com/settings/tokens (need repo scope)</div>
+    <label style="display:block;font-size:0.78rem;color:var(--text-secondary);margin-bottom:4px;">GitHub 访问令牌（可选，用于跨设备同步）</label>
+    <input type="password" id="ghTokenInput" class="form-input" placeholder="在此填入令牌" style="font-size:0.85rem;" onkeydown="if(event.key=='Enter'){var t=document.getElementById('ghTokenInput').value.trim();if(t){localStorage.setItem(GITHUB_TOKEN_KEY,t);showToast('令牌已保存！');}}">
+    <div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">用于发布帖子。在 github.com/settings/tokens 生成（需勾选 repo 权限）</div>
   </div>
 PE html>
 <html lang="zh-CN">
@@ -1845,7 +1845,7 @@ body {
 <body>
 <div <div id="loadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,17,23,0.97);z-index:99999;align-items:center;justify-content:center;flex-direction:column;gap:16px;font-family:system-ui,sans-serif;">
   <div style="width:44px;height:44px;border:3px solid #30363d;border-top-color:#c0392b;border-radius:50%;animation:twspin 0.8s linear infinite;"></div>
-  <div style="color:#e6edf3;font-size:1rem;">Loading shared posts...</div>
+  <div style="color:#e6edf3;font-size:1rem;">正在加载共享帖子...</div>
   <div style="color:#8b949e;font-size:0.8rem;" id="loadingSubtext"></div>
   <div style="color:#8b949e;font-size:0.72rem;max-width:280px;text-align:center;margin-top:4px;" id="loadingTokenNote"></div>
 </div>
@@ -2323,7 +2323,7 @@ async function fetchGithubIssues() {
   try {
     var u = "https://api.github.com/repos/" + GITHUB_REPO + "/issues?labels=exposure&state=open&sort=created&direction=desc&per_page=100&t=" + Date.now();
     var r = await fetch(u, { headers: { Authorization: "token " + getGithubToken(), Accept: "application/vnd.github.v3+json" } });
-    if (!r.ok) throw new Error("API " + r.status);
+    if (!r.ok) throw new Error("接口错误：" + r.status);
     var d = await r.json();
     return d.map(function(iss) {
       try {
@@ -2331,23 +2331,23 @@ async function fetchGithubIssues() {
         return { id: String(iss.id), githubIssueNumber: iss.number, title: b2.title||iss.title||"", exposedName: b2.exposedName||"", description: b2.description||"", evidence: b2.evidence||[], scamType: b2.scamType||"", createdAt: b2.createdAt||Date.now(), likes: b2.likes||[], comments: b2.comments||[], pinned: b2.pinned||false, images: b2.images||[] };
       } catch(e) { return null; }
     }).filter(Boolean);
-  } catch(e) { console.warn("GitHub fetch failed:", e); return null; }
+  } catch(e) { console.warn("从 GitHub 获取数据失败：", e); return null; }
 }
 
 async function postToGithub(post) {
   var bod = { title: post.title, exposedName: post.exposedName, description: post.description, evidence: post.evidence, scamType: post.scamType, createdAt: post.createdAt, likes: [], comments: [], pinned: false, images: post.images||[] };
   var str = JSON.stringify(bod);
-  if (str.length > 50000) throw new Error("Post too large. Reduce images or use URL links.");
+  if (str.length > 50000) throw new Error("帖子过大，请减少图片或改用链接");
   var r = await fetch("https://api.github.com/repos/" + GITHUB_REPO + "/issues", {
     method: "POST",
     headers: { Authorization: "token " + getGithubToken(), "Content-Type": "application/json", Accept: "application/vnd.github.v3+json" },
     body: JSON.stringify({ title: "[exposure] " + post.title, body: str, labels: ["exposure"] })
   });
-  if (!r.ok) { var e = await r.json(); throw new Error(e.message || ("Publish failed " + r.status)); }
+  if (!r.ok) { var e = await r.json(); throw new Error(e.message || ("发布失败：" + r.status)); }
   return await r.json();
 }
 
-function saveData(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch(e) { showToast("Storage full"); } }
+function saveData(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch(e) { showToast("存储已满"); } }
 function loadDataLocal() { try { var r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch(e) {} return { nextId: 1 }; }
 var appData = { posts: [], nextId: 1 };
 
@@ -2357,10 +2357,10 @@ async function initApp() {
     populateTagSelect();
   if (getGithubToken() === "YOUR_GITHUB_TOKEN_HERE") {
     var sn = document.getElementById("loadingSubtext");
-    if (sn) sn.textContent = "Public mode - add your GitHub PAT to enable sync";
+    if (sn) sn.textContent = "公共模式 - 填入 GitHub 令牌可启用同步";
   } else {
     var sn = document.getElementById("loadingSubtext");
-    if (sn) sn.textContent = "Syncing from GitHub";
+    if (sn) sn.textContent = "正在从 GitHub 同步";
   }
 var remote = await fetchGithubIssues();
   var local = loadDataLocal();
@@ -2626,7 +2626,7 @@ function publishPost() {
   var exposedName = document.getElementById("postExposedName").value.trim();
   var desc = document.getElementById("postDesc").value.trim();
   var scamType = document.getElementById("postScamType").value;
-  if (!title || !desc || !scamType) { showToast("Fill in title, description and select type"); return; }
+  if (!title || !desc || !scamType) { showToast("请填写标题、描述并选择类型"); return; }
   var evidenceInputs = document.querySelectorAll("#evidenceContainer .evidence-input");
   var evidence = [];
   evidenceInputs.forEach(function(inp) { var v = inp.value.trim(); if (v) evidence.push(v); });
@@ -2636,7 +2636,7 @@ function publishPost() {
   closePublishModal();
   renderAll();
   selectedImages = [];
-  postToGithub(post).then(function() { showToast("Published - visible to everyone!"); }).catch(function(e) { showToast("Saved locally, net failed: " + e.message); });
+  postToGithub(post).then(function() { showToast("发布成功，所有人可见！"); }).catch(function(e) { showToast("已保存到本地，同步失败：" + e.message); });
 }
 
 // ==================== RENDER// ==================== RENDER ====================
