@@ -1,10 +1,4 @@
-<!DOCTY
-  <div style="margin-top:12px;">
-    <label style="display:block;font-size:0.78rem;color:var(--text-secondary);margin-bottom:4px;">GitHub 访问令牌（可选，用于跨设备同步）</label>
-    <input type="password" id="ghTokenInput" class="form-input" placeholder="在此填入令牌" style="font-size:0.85rem;" onkeydown="if(event.key=='Enter'){var t=document.getElementById('ghTokenInput').value.trim();if(t){localStorage.setItem(GITHUB_TOKEN_KEY,t);showToast('令牌已保存！');}}">
-    <div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">用于发布帖子。在 github.com/settings/tokens 生成（需勾选 repo 权限）</div>
-  </div>
-PE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -2074,7 +2068,8 @@ body {
     <span class="admin-tab" data-tab="ea" onclick="switchAdminTab('ea')">EA管理</span>
     <span class="admin-tab" data-tab="indicators" onclick="switchAdminTab('indicators')">指标管理</span>
     <span class="admin-tab" data-tab="software" onclick="switchAdminTab('software')">软件下载</span>
-    <span class="admin-tab" data-tab="suggestions" onclick="switchAdminTab('suggestions')">建议管理</span>
+    <span class="admin-tab" data-tab="suggestions" onclick="switchAdminTab('suggestions')">建议管理</span><span class="admin-tab" data-tab="github" onclick="switchAdminTab('github')">GitHub 同步</span>
+    
   </div>
   <div class="admin-content">
     <div class="admin-tab-content active" id="adminTabPosts">
@@ -2179,7 +2174,33 @@ body {
       </div>
     </div>
     <div class="admin-tab-content" id="adminTabSuggestions">
-      <div class="admin-table-wrap" id="adminSuggestionsTableWrap"></div>
+      <div class="admin-table-wrap" id="adminSuggestionsTableWrap"></div><div class="admin-tab-content" id="adminTabGithub">
+      <div style="max-width:560px;margin:0 auto;padding:20px;">
+        <h3 style="margin-top:0;color:var(--text-primary);">GitHub 同步设置</h3>
+        <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;margin-bottom:20px;">
+          配置 GitHub 访问令牌（Personal Access Token）以启用帖子跨设备同步功能。<br>
+          帖子会作为 Issue 同步到数据仓库 <code>zc071313/traderwatch-data</code>。
+        </p>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;">
+          <label style="display:block;font-size:0.8rem;color:var(--text-secondary);margin-bottom:8px;font-weight:500;">
+            GitHub 访问令牌（PAT）
+          </label>
+          <input type="password" id="ghTokenAdmin" class="form-input" placeholder="ghp_..." style="font-size:0.85rem;width:100%;">
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:8px;line-height:1.5;">
+            • 需要 <code>repo</code> 权限（读写数据仓库）<br>
+            • 在 <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent);">github.com/settings/tokens</a> 生成（选择 classic + repo 权限）<br>
+            • 令牌仅保存在浏览器本地（localStorage），不会上传到任何服务器
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-primary" onclick="saveGithubToken()">保存令牌</button>
+          <button class="btn btn-outline" onclick="testGithubToken()">测试连接</button>
+          <button class="btn btn-outline" style="color:var(--danger);border-color:var(--danger);" onclick="clearGithubToken()">清除令牌</button>
+        </div>
+        <div id="ghTokenStatus" style="margin-top:16px;font-size:0.8rem;"></div>
+      </div>
+    </div>
+    
     </div>
   </div>
 </div>
@@ -4287,6 +4308,73 @@ function closeKlineExpand() {
 
 
 initApp();
+
+// ============ GitHub Token 管理（管理面板） ============
+function saveGithubToken() {
+  var t = document.getElementById('ghTokenAdmin').value.trim();
+  if (!t) {
+    showGhStatus('请先输入令牌', 'error');
+    return;
+  }
+  localStorage.setItem(GITHUB_TOKEN_KEY, t);
+  showGhStatus('✓ 令牌已保存到本地', 'success');
+  showToast('GitHub 令牌已保存');
+}
+
+async function testGithubToken() {
+  var t = localStorage.getItem(GITHUB_TOKEN_KEY) || '';
+  if (!t) {
+    showGhStatus('请先保存令牌', 'error');
+    return;
+  }
+  showGhStatus('正在测试...', 'info');
+  try {
+    var r = await fetch('https://api.github.com/repos/zc071313/traderwatch-data', {
+      headers: { 'Authorization': 'token ' + t }
+    });
+    if (r.ok) {
+      showGhStatus('✓ 连接成功！', 'success');
+    } else {
+      showGhStatus('✗ 失败：' + r.status + ' ' + r.statusText, 'error');
+    }
+  } catch (e) {
+    showGhStatus('✗ 网络错误：' + e.message, 'error');
+  }
+}
+
+function clearGithubToken() {
+  if (!confirm('确定要清除已保存的令牌吗？')) return;
+  localStorage.removeItem(GITHUB_TOKEN_KEY);
+  var input = document.getElementById('ghTokenAdmin');
+  if (input) input.value = '';
+  showGhStatus('✓ 令牌已清除', 'success');
+  showToast('GitHub 令牌已清除');
+}
+
+function showGhStatus(msg, type) {
+  var el = document.getElementById('ghTokenStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = type === 'success' ? '#3fb950' : type === 'error' ? '#f85149' : '#8b949e';
+}
+
+// Hook into switchAdminTab to populate the GitHub token field
+document.addEventListener('DOMContentLoaded', function() {
+  var _orig = window.switchAdminTab;
+  window.switchAdminTab = function(tab) {
+    if (_orig) _orig(tab);
+    if (tab === 'github') {
+      var t = localStorage.getItem(GITHUB_TOKEN_KEY) || '';
+      var input = document.getElementById('ghTokenAdmin');
+      if (input) input.value = t;
+      if (t) {
+        showGhStatus('✓ 已配置令牌（点击"测试连接"验证）', 'info');
+      } else {
+        showGhStatus('⚠ 尚未配置令牌', 'info');
+      }
+    }
+  };
+});
 </script>
 </body>
 </html>
