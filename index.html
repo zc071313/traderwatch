@@ -1962,6 +1962,23 @@ body {
   </div>
 </div>
 
+
+<!-- Tag Modal -->
+<div class="modal-overlay" id="tagModal" style="display:none;">
+  <div class="change-pwd-modal" style="max-width:380px;">
+    <div class="modal-title" id="tagModalTitle">添加标签</div>
+    <div class="form-group">
+      <label class="form-label">标签名称</label>
+      <input type="text" class="form-input" id="tagNameInput" placeholder="请输入标签名称" onkeydown="if(event.key==='Enter')saveTag()">
+    </div>
+    <div class="admin-confirm-actions" style="margin-top:16px;">
+      <button class="btn-cancel" onclick="closeTagModal()">取消</button>
+      <button class="btn-submit" onclick="saveTag()">保存</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- Bottom Nav -->
 <nav class="bottom-nav" id="bottomNav">
   <button class="bottom-nav-item active" data-page="home" onclick="switchPage('home')">
@@ -3500,6 +3517,114 @@ function closePlatformModal() {
 document.getElementById('platformModal').addEventListener('click', function(e) {
   if (e.target === this) closePlatformModal();
 });
+
+
+// ==================== TAG MANAGEMENT ====================
+let editingTagKey = null;
+
+function openTagModal(key) {
+  editingTagKey = key;
+  var modal = document.getElementById('tagModal');
+  var title = document.getElementById('tagModalTitle');
+  var input = document.getElementById('tagNameInput');
+  if (key) {
+    title.textContent = '编辑标签';
+    var tag = tagData.find(function(t) { return t.key === key; });
+    input.value = tag ? tag.name : '';
+  } else {
+    title.textContent = '添加标签';
+    input.value = '';
+  }
+  modal.style.display = 'flex';
+  input.focus();
+}
+
+function closeTagModal() {
+  document.getElementById('tagModal').style.display = 'none';
+  editingTagKey = null;
+}
+
+// Close on overlay click
+document.getElementById('tagModal').addEventListener('click', function(e) {
+  if (e.target === this) closeTagModal();
+});
+
+function saveTag() {
+  var input = document.getElementById('tagNameInput');
+  var name = input.value.trim();
+  if (!name) { showToast('请输入标签名称'); return; }
+
+  if (editingTagKey) {
+    // Edit existing
+    var tag = tagData.find(function(t) { return t.key === editingTagKey; });
+    if (tag) {
+      tag.name = name;
+      showToast('标签已更新');
+    }
+  } else {
+    // Add new
+    var key = 'tag_' + Date.now();
+    tagData.push({ key: key, name: name });
+    showToast('标签已添加');
+  }
+  saveTags(tagData);
+  closeTagModal();
+  renderAdminTagTable();
+  // Refresh visible tag list
+  renderFilterTags();
+  var sel = document.getElementById('postScamType');
+  if (sel) {
+    sel.innerHTML = '<option value="">请选择标签</option>' + tagData.map(function(t) {
+      return '<option value="' + t.key + '">' + escapeHtml(t.name) + '</option>';
+    }).join('');
+  }
+}
+
+function deleteTag(key) {
+  var tag = tagData.find(function(t) { return t.key === key; });
+  if (!tag) return;
+  if (!confirm('确定删除标签「' + tag.name + '」？')) return;
+  tagData = tagData.filter(function(t) { return t.key !== key; });
+  saveTags(tagData);
+  showToast('标签已删除');
+  renderAdminTagTable();
+  renderFilterTags();
+  var sel = document.getElementById('postScamType');
+  if (sel) {
+    sel.innerHTML = '<option value="">请选择标签</option>' + tagData.map(function(t) {
+      return '<option value="' + t.key + '">' + escapeHtml(t.name) + '</option>';
+    }).join('');
+  }
+}
+
+function renderAdminTagTable() {
+  var tbody = document.getElementById('adminTagTableBody');
+  if (!tbody) return;
+  if (tagData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:40px;color:var(--text-muted);">暂无标签</td></tr>';
+    return;
+  }
+  // Count posts using each tag
+  var tagCounts = {};
+  allPosts.forEach(function(p) {
+    if (p.scamType) {
+      tagCounts[p.scamType] = (tagCounts[p.scamType] || 0) + 1;
+    }
+  });
+  tbody.innerHTML = tagData.map(function(t) {
+    var count = tagCounts[t.key] || 0;
+    return '<tr>' +
+      '<td><span class="filter-tag active" style="cursor:default;">' + escapeHtml(t.name) + '</span></td>' +
+      '<td style="text-align:center;color:var(--text-secondary);">' + count + '</td>' +
+      '<td style="white-space:nowrap;">' +
+        '<button class="btn btn-sm btn-outline" style="margin-right:4px;" onclick="openTagModal(\'' + t.key + '\')">编辑</button>' +
+        '<button class="btn btn-sm btn-outline" style="color:var(--red);border-color:var(--red);" onclick="deleteTag(\'' + t.key + '\')">删除</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+
 
 // ==================== ADMIN PLATFORM SUB-TAB ====================
 let currentAdminPlatformTab = 'forex';
