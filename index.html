@@ -351,6 +351,63 @@ body {
   border-color: var(--accent);
 }
 
+/* Image Upload */
+.image-upload-area {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.image-preview-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.image-preview-item {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.image-preview-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.image-preview-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.image-preview-remove:hover {
+  background: rgba(220,20,60,0.9);
+}
+.storage-warning {
+  font-size: 0.68rem;
+  color: var(--gold);
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(255,193,7,0.08);
+  border-radius: 4px;
+  border: 1px dashed rgba(255,193,7,0.3);
+}
+
 /* Tags */
 .tag-row {
   display: flex;
@@ -1944,6 +2001,14 @@ body {
       </div>
       <div class="form-hint">支持图片URL或截图链接，多个证据逐一添加</div>
       <button class="btn btn-sm btn-outline" style="margin-top:6px;" onclick="addEvidenceInput()">+ 添加证据</button>
+      <div class="image-upload-area">
+        <label class="form-label" style="margin-top:12px;">上传证据截图（最多 5 张）</label>
+        <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/gif,image/webp" multiple style="display:none;" onchange="handleImageSelect(event)">
+        <button class="btn btn-sm btn-outline" onclick="openImageUpload()">选择图片文件</button>
+        <span class="form-hint" style="margin-left:8px;">支持 jpg / png / gif / webp，单张超 500KB 自动压缩</span>
+        <div class="image-preview-container" id="imagePreviewContainer"></div>
+        <div class="storage-warning" id="storageWarning" style="display:none;"></div>
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">骗局类型标签 *</label>
@@ -2366,6 +2431,100 @@ const icons = {
   share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>'
 };
 
+// ==================== IMAGE UPLOAD ====================
+let selectedImages = [];
+
+function openImageUpload() {
+  document.getElementById('imageFileInput').click();
+}
+
+function handleImageSelect(event) {
+  const files = Array.from(event.target.files);
+  if (selectedImages.length + files.length > 5) {
+    showToast('最多上传 5 张图片');
+    event.target.value = '';
+    return;
+  }
+  let processed = 0;
+  files.forEach(file => {
+    if (!file.type.match(/image\/(jpeg|png|gif|webp)/)) {
+      processed++;
+      if (processed === files.length && selectedImages.length > 0) renderImagePreviews();
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      let base64 = e.target.result;
+      if (file.size > 512000) {
+        compressImage(base64, function(compressed) {
+          addImagePreview(compressed);
+          processed++;
+          if (processed === files.length) { renderImagePreviews(); checkStorage(); }
+        });
+      } else {
+        addImagePreview(base64);
+        processed++;
+        if (processed === files.length) { renderImagePreviews(); checkStorage(); }
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+
+function compressImage(base64, callback) {
+  const img = new Image();
+  img.onload = function() {
+    const canvas = document.createElement('canvas');
+    let w = img.width, h = img.height;
+    if (w > 800) {
+      h = Math.round(h * 800 / w);
+      w = 800;
+    }
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/jpeg', 0.7));
+  };
+  img.src = base64;
+}
+
+function addImagePreview(base64) {
+  selectedImages.push(base64);
+}
+
+function removeImagePreview(index) {
+  selectedImages.splice(index, 1);
+  renderImagePreviews();
+  checkStorage();
+}
+
+function renderImagePreviews() {
+  const container = document.getElementById('imagePreviewContainer');
+  if (!container) return;
+  container.innerHTML = selectedImages.map((img, i) =>
+    '<div class="image-preview-item">' +
+    '<img class="image-preview-thumb" src="' + img + '" alt="证据截图' + (i + 1) + '">' +
+    '<button class="image-preview-remove" onclick="removeImagePreview(' + i + ')" title="移除">&times;</button>' +
+    '</div>'
+  ).join('');
+}
+
+function checkStorage() {
+  const warning = document.getElementById('storageWarning');
+  if (!warning) return;
+  const imagesJson = JSON.stringify(selectedImages);
+  const currentData = JSON.stringify(appData);
+  const totalSize = new Blob([imagesJson, currentData]).size;
+  if (totalSize > 3500000) {
+    warning.style.display = 'block';
+    warning.textContent = '图片占用空间约 ' + (totalSize / 1048576).toFixed(1) + ' MB，超出 localStorage 5MB 限制可能导致保存失败，建议使用链接方式或减少图片数量';
+  } else {
+    warning.style.display = 'none';
+  }
+}
+
 // ==================== PUBLISH ====================
 function openPublishModal() {
   document.getElementById('publishModal').style.display = 'flex';
@@ -2379,6 +2538,9 @@ function openPublishModal() {
       <input type="text" class="form-input evidence-input" placeholder="https://example.com/evidence1.png">
       <button class="btn btn-sm btn-outline" onclick="removeEvidenceInput(this)" style="visibility:hidden;">-</button>
     </div>`;
+  selectedImages = [];
+  renderImagePreviews();
+  document.getElementById('storageWarning').style.display = 'none';
 }
 
 function closePublishModal() {
@@ -2429,7 +2591,8 @@ function publishPost() {
     createdAt: Date.now(),
     likes: [],
     comments: [],
-    pinned: false
+    pinned: false,
+    images: [...selectedImages]
   };
 
   appData.posts.unshift(post);
@@ -2437,6 +2600,7 @@ function publishPost() {
   closePublishModal();
   renderAll();
   showToast('曝光帖已发布');
+  selectedImages = [];
 }
 
 // ==================== RENDER ====================
@@ -2531,7 +2695,7 @@ function renderPostCard(post) {
       }
     });
     if (images.length > 0) {
-      evidenceHtml += '<div class="evidence-label">证据截图</div><div class="evidence-images">';
+      evidenceHtml += '<div class="evidence-label">证据截图（URL）</div><div class="evidence-images">';
       images.forEach(url => {
         evidenceHtml += `<img class="evidence-img" src="${escapeHtml(url)}" onclick="event.stopPropagation();openImgPreview('${escapeHtml(url)}')" loading="lazy" onerror="this.style.display='none'">`;
       });
@@ -2543,6 +2707,16 @@ function renderPostCard(post) {
         evidenceHtml += `<a class="evidence-link" href="${escapeHtml(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${escapeHtml(url)}</a> `;
       });
     }
+  }
+
+  // Local images (base64)
+  if (post.images && post.images.length > 0) {
+    const label = evidenceHtml ? '上传证据截图' : '证据截图';
+    evidenceHtml += '<div class="evidence-label">' + label + '</div><div class="evidence-images">';
+    post.images.forEach(img => {
+      evidenceHtml += '<img class="evidence-img" src="' + img + '" onclick="event.stopPropagation();openImgPreview(\'' + img + '\')" loading="lazy">';
+    });
+    evidenceHtml += '</div>';
   }
 
   const evidenceSection = evidenceHtml ? `<div class="evidence-section">${evidenceHtml}</div>` : '';
