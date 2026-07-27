@@ -1728,6 +1728,34 @@ body {
 }
 .btn-cart:hover { filter: brightness(1.08); transform: translateY(-1px); }
 
+.buy-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg,#f7931a,#ffb347);
+  color: #1a1205;
+  transition: filter 0.15s, transform 0.15s;
+}
+.buy-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.buy-addr-box {
+  background: #0e1117;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.buy-addr-box .addr-text { flex:1; font-family: monospace; font-size:0.7rem; color: var(--text-secondary); word-break: break-all; line-height:1.4; }
+.purchase-screenshot-preview { margin-top:6px; }
+.purchase-screenshot-preview img { max-width:100%; max-height:160px; border-radius:6px; border:1px solid var(--border); }
+
 .item-file-input {
   padding: 6px 8px !important;
   font-size: 0.78rem !important;
@@ -2351,6 +2379,34 @@ body {
     <div class="admin-confirm-actions" style="margin-top:16px;">
       <button class="btn-cancel" onclick="closeProductModal()">取消</button>
       <button class="btn-submit" onclick="saveProduct()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Purchase Modal -->
+<div class="modal-overlay" id="purchaseModal" style="display:none;">
+  <div class="change-pwd-modal" style="max-width:460px;">
+    <div class="modal-title" id="purchaseModalTitle">购买商品</div>
+    <div class="form-group">
+      <label class="form-label">收货人信息（姓名 / 联系方式 / 收件地址）</label>
+      <textarea class="suggestion-textarea" id="purchaseRecipient" placeholder="请填写收货人姓名、联系方式与收件地址"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">收款合约地址（请向此地址付款）</label>
+      <div class="buy-addr-box"><span class="addr-text" id="purchaseAddrText"></span><button class="copy-addr-btn" type="button" onclick="copyPurchaseAddress()">复制</button></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">付款截图上传</label>
+      <input type="file" id="purchaseScreenshot" accept="image/*" onchange="handlePurchaseScreenshot(event)" style="font-size:0.8rem;">
+      <div class="purchase-screenshot-preview" id="purchaseScreenshotPreview"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">付款哈希（Tx Hash）</label>
+      <input type="text" class="form-input" id="purchaseHash" placeholder="粘贴链上交易哈希">
+    </div>
+    <div class="admin-confirm-actions" style="margin-top:16px;">
+      <button class="btn-cancel" onclick="closePurchaseModal()">取消</button>
+      <button class="btn-submit" onclick="submitPurchase()">提交订单</button>
     </div>
   </div>
 </div>
@@ -3406,9 +3462,85 @@ function renderCartPage() {
       + '<div class="product-card-name">' + escapeHtml(p.name) + '</div>'
       + (p.description ? '<div class="product-card-desc">' + escapeHtml(p.description) + '</div>' : '')
       + '<div class="product-card-meta"><span class="product-card-price">' + priceTxt + '</span><span class="product-card-chain">' + escapeHtml(p.chain || '') + '</span></div>'
-      + '<div class="product-card-address"><span class="addr-text">' + escapeHtml(addr) + '</span><button class="copy-addr-btn" onclick="copyProductAddress(' + p.id + ')">复制</button></div>'
+      + '<button class="buy-btn" onclick="openPurchaseModal(' + p.id + ')">购买</button>'
       + '</div>';
   }).join('');
+}
+
+const ORDER_STORAGE_KEY = 'traderwatch_orders';
+let currentPurchaseProductId = null;
+
+function loadOrders() {
+  try { return JSON.parse(localStorage.getItem(ORDER_STORAGE_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+function saveOrders(arr) {
+  try { localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(arr)); return true; }
+  catch(e) {
+    try {
+      var light = arr.map(function(o){ var c2 = Object.assign({}, o); delete c2.screenshot; return c2; });
+      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(light)); return true;
+    } catch(e2) { return false; }
+  }
+}
+
+function openPurchaseModal(id) {
+  var p = productData.find(function(x){ return x.id === id; });
+  if (!p) return;
+  currentPurchaseProductId = id;
+  document.getElementById('purchaseModalTitle').textContent = '购买：' + p.name;
+  document.getElementById('purchaseAddrText').textContent = p.address || '（未设置收款地址）';
+  document.getElementById('purchaseRecipient').value = '';
+  document.getElementById('purchaseHash').value = '';
+  document.getElementById('purchaseScreenshot').value = '';
+  document.getElementById('purchaseScreenshotPreview').innerHTML = '';
+  document.getElementById('purchaseModal').style.display = 'flex';
+}
+function closePurchaseModal() {
+  document.getElementById('purchaseModal').style.display = 'none';
+  currentPurchaseProductId = null;
+}
+function copyPurchaseAddress() {
+  var t = document.getElementById('purchaseAddrText').textContent;
+  if (!t || t.indexOf('未设置') !== -1) { showToast('该商品未设置收款地址'); return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).then(function(){ showToast('已复制收款地址'); }, function(){ fallbackCopy(t); });
+  } else { fallbackCopy(t); }
+}
+function handlePurchaseScreenshot(e) {
+  var file = e.target.files && e.target.files[0];
+  var prev = document.getElementById('purchaseScreenshotPreview');
+  if (!file) { prev.innerHTML = ''; return; }
+  if (!file.type || file.type.indexOf('image') !== 0) { showToast('请选择图片文件'); prev.innerHTML = ''; return; }
+  if (file.size > 3 * 1024 * 1024) { showToast('图片需小于 3MB'); prev.innerHTML = ''; e.target.value = ''; return; }
+  var reader = new FileReader();
+  reader.onload = function(ev) { prev.innerHTML = '<img src="' + ev.target.result + '" alt="付款截图">'; };
+  reader.readAsDataURL(file);
+}
+function submitPurchase() {
+  var recipient = document.getElementById('purchaseRecipient').value.trim();
+  var hash = document.getElementById('purchaseHash').value.trim();
+  var addr = document.getElementById('purchaseAddrText').textContent;
+  if (!recipient) { showToast('请填写收货人信息'); return; }
+  if (!addr || addr.indexOf('未设置') !== -1) { showToast('该商品未设置收款合约地址'); return; }
+  if (!hash) { showToast('请填写付款哈希'); return; }
+  var prevImg = document.querySelector('#purchaseScreenshotPreview img');
+  var screenshot = prevImg ? prevImg.src : null;
+  var orders = loadOrders();
+  orders.push({
+    productId: currentPurchaseProductId,
+    recipient: recipient,
+    address: addr,
+    hash: hash,
+    screenshot: screenshot,
+    time: new Date().toISOString()
+  });
+  if (saveOrders(orders)) {
+    closePurchaseModal();
+    showToast('订单已提交，等待商家确认');
+  } else {
+    showToast('提交失败：本地存储已满');
+  }
 }
 
 function renderAdminProductTable() {
