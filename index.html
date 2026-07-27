@@ -1843,7 +1843,7 @@ body {
 <body>
 <div <div id="loadingOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,17,23,0.97);z-index:99999;align-items:center;justify-content:center;flex-direction:column;gap:16px;font-family:system-ui,sans-serif;">
   <div style="width:44px;height:44px;border:3px solid #30363d;border-top-color:#c0392b;border-radius:50%;animation:twspin 0.8s linear infinite;"></div>
-  <div style="color:#e6edf3;font-size:1rem;">正在加载共享帖子...</div>
+  <div style="color:#e6edf3;font-size:1rem;">正在加载...</div>
   <div style="color:#8b949e;font-size:0.8rem;" id="loadingSubtext"></div>
   <div style="color:#8b949e;font-size:0.72rem;max-width:280px;text-align:center;margin-top:4px;" id="loadingTokenNote"></div>
 </div>
@@ -1861,10 +1861,7 @@ body {
       </div>
     </div>
     <div class="header-actions">
-      <button class="btn btn-primary" onclick="openPublishModal()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        发布曝光
-      </button>
+      
       <button class="btn btn-kline" onclick="openKlineExpand()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         K线训练大师
@@ -1883,29 +1880,7 @@ body {
 </div>
 
 <!-- Main Content -->
-<main class="main">
-  <!-- Stats -->
-  <div class="stats-bar" id="statsBar"></div>
-
-  <!-- Search & Filter -->
-  <div class="search-bar">
-    <div class="search-input-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" class="search-input" id="searchInput" placeholder="搜索曝光标题或关键词..." oninput="renderPosts()">
-    </div>
-  </div>
-  <div class="filter-tags" id="filterTags">
-    <span class="filter-tag active" data-tag="all" onclick="setFilter('all', this)">全部</span>
-  </div>
-
-  <!-- Post List -->
-  <div class="post-list" id="postList"></div>
-
-  <!-- Suggestion Link -->
-  <div class="suggestion-link-wrap">
-    <a class="suggestion-link" onclick="openSuggestionModal()">给网站提建议</a>
-  </div>
-</main>
+<main class="main"></main>
 
 <!-- Platform List Page -->
 <div class="platform-page" id="platformPage">
@@ -2003,54 +1978,6 @@ body {
   </button>
 </nav>
 
-
-<!-- Publish Modal -->
-<div class="modal-overlay" id="publishModal" style="display:none;">
-  <div class="modal">
-    <div class="modal-title">发布曝光帖</div>
-    <div class="form-group">
-      <label class="form-label">曝光标题 *</label>
-      <input type="text" class="form-input" id="postTitle" placeholder="如：XX平台诱导交易 骗取入金">
-    </div>
-    <div class="form-group">
-      <label class="form-label">被曝光者姓名</label>
-      <input type="text" class="form-input" id="postExposedName" placeholder="如：张三、XX代理">
-    </div>
-    <div class="form-group">
-      <label class="form-label">详细描述 *</label>
-      <textarea class="form-textarea" id="postDesc" placeholder="请详细描述被骗经过、涉及金额、时间线等..."></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">证据链（图片截图URL或链接）</label>
-      <div id="evidenceContainer">
-        <div class="evidence-input-group">
-          <input type="text" class="form-input" placeholder="https://example.com/evidence1.png">
-          <button class="btn btn-sm btn-outline" onclick="removeEvidenceInput(this)" style="visibility:hidden;">-</button>
-        </div>
-      </div>
-      <div class="form-hint">支持图片URL或截图链接，多个证据逐一添加</div>
-      <button class="btn btn-sm btn-outline" style="margin-top:6px;" onclick="addEvidenceInput()">+ 添加证据</button>
-      <div class="image-upload-area">
-        <label class="form-label" style="margin-top:12px;">上传证据截图（最多 5 张）</label>
-        <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/gif,image/webp" multiple style="display:none;" onchange="handleImageSelect(event)">
-        <button class="btn btn-sm btn-outline" onclick="openImageUpload()">选择图片文件</button>
-        <span class="form-hint" style="margin-left:8px;">支持 jpg / png / gif / webp，单张超 500KB 自动压缩</span>
-        <div class="image-preview-container" id="imagePreviewContainer"></div>
-        <div class="storage-warning" id="storageWarning" style="display:none;"></div>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">骗局类型标签 *</label>
-      <select class="form-select" id="postScamType">
-        <option value="">请选择标签</option>
-      </select>
-    </div>
-    <div class="form-actions">
-      <button class="btn-cancel" onclick="closePublishModal()">取消</button>
-      <button class="btn-submit" onclick="publishPost()">提交曝光</button>
-    </div>
-  </div>
-</div>
 
 <!-- Image Preview -->
 <div class="img-preview-overlay" id="imgPreview" style="display:none;" onclick="closeImgPreview()">
@@ -2692,8 +2619,7 @@ function setFilter(tag, el) {
 }
 
 function renderAll() {
-  renderStatsAndFilters();
-  renderPosts();
+  if (currentPage === 'home') openKlineExpand();
 }
 
 function renderStatsAndFilters() {
@@ -2954,16 +2880,12 @@ document.addEventListener('keydown', function(e) {
     } else if (document.getElementById('tagModal').style.display === 'flex') {
       closeTagModal();
     } else {
-      closePublishModal();
       closeImgPreview();
     }
   }
 });
 
 // Click outside modals to close
-document.getElementById('publishModal').addEventListener('click', function(e) {
-  if (e.target === this) closePublishModal();
-});
 document.getElementById('passwordModal').addEventListener('click', function(e) {
   if (e.target === this) closePasswordModal();
 });
@@ -3281,6 +3203,7 @@ let currentPage = 'home';
 
 function switchPage(page) {
   currentPage = page;
+  if (page !== 'home') closeKlineExpand();
   document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
   const navItem = document.querySelector(`.bottom-nav-item[data-page="${page}"]`);
   if (navItem) navItem.classList.add('active');
@@ -3299,7 +3222,7 @@ function switchPage(page) {
     header.style.display = '';
     main.style.display = '';
     document.getElementById('bottomNav').style.display = '';
-    renderAll();
+    openKlineExpand();
   } else if (page === 'platforms') {
     header.style.display = '';
     main.style.display = 'none';
@@ -4433,7 +4356,7 @@ function openKlineExpand() {
     iframe.src = 'https://zc071313.github.io/k-line-trainer/';
   }
   // Fullscreen mode: hide all page content below header
-  var ids = ['statsBar', 'filterTags', 'postList', 'bottomNav'];
+  var ids = ['statsBar', 'filterTags', 'postList'];
   ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
   var classes = ['.search-bar', '.suggestion-link-wrap'];
   classes.forEach(function(sel) { var el = document.querySelector(sel); if (el) el.style.display = 'none'; });
@@ -4444,7 +4367,7 @@ function openKlineExpand() {
 function closeKlineExpand() {
   document.getElementById('klineExpand').style.display = 'none';
   // Restore all hidden elements
-  var ids = ['statsBar', 'filterTags', 'postList', 'bottomNav'];
+  var ids = ['statsBar', 'filterTags', 'postList'];
   ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = ''; });
   var classes = ['.search-bar', '.suggestion-link-wrap'];
   classes.forEach(function(sel) { var el = document.querySelector(sel); if (el) el.style.display = ''; });
