@@ -1814,6 +1814,30 @@ body {
   letter-spacing: 0.3px;
   vertical-align: middle;
 }
+/* 订单管理：付款截图缩略图 + 状态徽章 */
+.order-shot {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+.order-status {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.order-status.pending {
+  background: rgba(247,147,26,0.16);
+  color: #ffb347;
+}
+.order-status.shipped {
+  background: rgba(63,185,80,0.16);
+  color: #3fb950;
+}
 
 .item-file-input {
   padding: 6px 8px !important;
@@ -2206,12 +2230,12 @@ body {
   <div class="admin-tabs">
     <span class="admin-tab active" data-tab="posts" onclick="switchAdminTab('posts')">帖子管理</span>
     <span class="admin-tab" data-tab="platforms" onclick="switchAdminTab('platforms')">平台管理</span>
-    <span class="admin-tab" data-tab="tags" onclick="switchAdminTab('tags')">标签管理</span>
     <span class="admin-tab" data-tab="ea" onclick="switchAdminTab('ea')">EA管理</span>
     <span class="admin-tab" data-tab="indicators" onclick="switchAdminTab('indicators')">指标管理</span>
     <span class="admin-tab" data-tab="software" onclick="switchAdminTab('software')">软件下载</span>
     <span class="admin-tab" data-tab="suggestions" onclick="switchAdminTab('suggestions')">建议管理</span><span class="admin-tab" data-tab="github" onclick="switchAdminTab('github')">GitHub 同步</span>
     <span class="admin-tab" data-tab="web3" onclick="switchAdminTab('web3')">Web3商品</span>
+    <span class="admin-tab" data-tab="orders" onclick="switchAdminTab('orders')">订单管理</span>
     
   </div>
   <div class="admin-content">
@@ -2247,21 +2271,6 @@ body {
             <th style="width:100px;">操作</th>
           </tr></thead>
           <tbody id="adminCryptoPlatformTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="admin-tab-content" id="adminTabTags">
-      <div class="admin-table-wrap">
-        <div class="admin-platform-toolbar">
-          <button class="btn btn-sm btn-primary" onclick="openTagModal()">+ 添加标签</button>
-        </div>
-        <table class="admin-table">
-          <thead><tr>
-            <th>标签名称</th>
-            <th style="width:120px;">引用数</th>
-            <th style="width:100px;">操作</th>
-          </tr></thead>
-          <tbody id="adminTagTableBody"></tbody>
         </table>
       </div>
     </div>
@@ -2363,6 +2372,25 @@ body {
             <th style="width:100px;">操作</th>
           </tr></thead>
           <tbody id="adminProductTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="admin-tab-content" id="adminTabOrders">
+      <div class="admin-table-wrap">
+        <div class="admin-platform-toolbar">
+          <span style="font-size:0.78rem;color:var(--text-secondary);">客户提交的购买订单（含收货信息与付款凭证）。标记发货后状态会同步到所有设备。</span>
+        </div>
+        <table class="admin-table">
+          <thead><tr>
+            <th>时间</th>
+            <th>商品</th>
+            <th>客户收货信息</th>
+            <th>付款哈希</th>
+            <th>付款截图</th>
+            <th>状态</th>
+            <th style="width:110px;">操作</th>
+          </tr></thead>
+          <tbody id="adminOrderTableBody"></tbody>
         </table>
       </div>
     </div>
@@ -3610,6 +3638,105 @@ async function initProductSync() {
   }
 }
 
+// =========== GITHUB FILE SYNC FOR ORDERS ===========
+// 订单含客户收货信息/付款凭证，与商品同仓库（公开）读写：
+// 读取免 token（后台/任意设备都能看），写入需 token（仅商家在已保存令牌时上传/更新）。
+const ORDER_GITHUB_PATH = 'orders.json';
+async function fetchGithubOrders() {
+  const url = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + ORDER_GITHUB_PATH + '?t=' + Date.now();
+  const token = getGithubToken();
+  const tryFetch = async function(useToken) {
+    const headers = { Accept: 'application/vnd.github.v3+json', 'User-Agent': 'traderwatch' };
+    if (useToken && token && token !== GITHUB_TOKEN_DEFAULT) headers['Authorization'] = 'token ' + token;
+    try {
+      const r = await fetch(url, { headers: headers });
+      if (r.status === 404) return { sha: null, orders: [] };
+      if (!r.ok) return null;
+      const d = await r.json();
+      let orders = [];
+      try { orders = JSON.parse(b64decodeUtf8(d.content)); } catch(e) { orders = []; }
+      if (!Array.isArray(orders)) orders = [];
+      return { sha: d.sha, orders: orders };
+    } catch(e) { return null; }
+  };
+  if (token && token !== GITHUB_TOKEN_DEFAULT) {
+    const withToken = await tryFetch(true);
+    if (withToken) return withToken;
+  }
+  return await tryFetch(false);
+}
+// 写入整个订单数组（带 sha 防覆盖）。无令牌返回 'skipped'。
+async function pushGithubOrders(ordersArr) {
+  try {
+    const token = getGithubToken();
+    if (!token || token === GITHUB_TOKEN_DEFAULT) return 'skipped';
+    let sha = null;
+    try {
+      const cur = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + ORDER_GITHUB_PATH, { headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json' } });
+      if (cur.ok) sha = (await cur.json()).sha;
+    } catch(e) {}
+    const body = { message: 'update orders', content: b64encodeUtf8(JSON.stringify(ordersArr, null, 2)) };
+    if (sha) body.sha = sha;
+    const r = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + ORDER_GITHUB_PATH, {
+      method: 'PUT', headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json', Accept: 'application/vnd.github.v3+json' }, body: JSON.stringify(body)
+    });
+    if (!r.ok) { console.warn('订单同步写入失败', r.status); return false; }
+    return true;
+  } catch(e) { console.warn('订单同步写入失败', e); return false; }
+}
+// 客户提交订单后：合并远程订单再上传，避免覆盖他人订单。
+async function pushOrderToGithub(order) {
+  try {
+    var remote = await fetchGithubOrders();
+    var all = (remote && remote.orders) ? remote.orders.slice() : loadOrders().slice();
+    if (!all.some(function(o){ return o.id === order.id; })) all.push(order);
+    await pushGithubOrders(all);
+  } catch(e) { console.warn('订单同步失败', e); }
+}
+async function renderAdminOrders() {
+  const tbody = document.getElementById('adminOrderTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">加载中...</td></tr>';
+  let remote = null;
+  try { remote = await fetchGithubOrders(); } catch(e) {}
+  let orders = (remote && remote.orders) ? remote.orders.slice() : loadOrders().slice();
+  if (!orders.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">暂无订单</td></tr>';
+    return;
+  }
+  orders.sort(function(a,b){ return new Date(b.time) - new Date(a.time); });
+  tbody.innerHTML = orders.map(function(o){
+    var shot = o.screenshot ? '<img class="order-shot" src="' + escapeHtml(o.screenshot) + '" alt="付款截图">' : '<span style="color:var(--text-muted);">无</span>';
+    var statusHtml = o.status === 'shipped'
+      ? '<span class="order-status shipped">已发货</span>'
+      : '<span class="order-status pending">待发货</span>';
+    var actionBtn = o.status === 'shipped'
+      ? '<button class="btn btn-sm btn-outline" onclick="setOrderStatus(\'' + o.id + '\',\'pending\')">标记未发</button>'
+      : '<button class="btn btn-sm btn-primary" onclick="setOrderStatus(\'' + o.id + '\',\'shipped\')">标记发货</button>';
+    return '<tr>'
+      + '<td style="font-size:0.72rem;white-space:nowrap;">' + formatTime(o.time) + '</td>'
+      + '<td>' + escapeHtml(o.productName || ('商品#' + o.productId)) + '<br><span style="font-size:0.7rem;color:var(--text-muted);">' + escapeHtml(o.productPrice || '') + '</span></td>'
+      + '<td style="font-size:0.78rem;white-space:pre-wrap;word-break:break-all;max-width:200px;">' + escapeHtml(o.recipient || '') + '</td>'
+      + '<td style="font-size:0.72rem;word-break:break-all;max-width:140px;">' + escapeHtml(o.hash || '') + '</td>'
+      + '<td>' + shot + '</td>'
+      + '<td style="text-align:center;">' + statusHtml + '</td>'
+      + '<td style="white-space:nowrap;">' + actionBtn + '</td>'
+      + '</tr>';
+  }).join('');
+}
+async function setOrderStatus(id, status) {
+  var remote = await fetchGithubOrders();
+  var orders = (remote && remote.orders) ? remote.orders.slice() : loadOrders().slice();
+  var idx = orders.findIndex(function(o){ return o.id === id; });
+  if (idx === -1) { showToast('订单不存在'); return; }
+  orders[idx].status = status;
+  saveOrders(orders);
+  var ok = await pushGithubOrders(orders);
+  if (ok === true) { showToast(status === 'shipped' ? '已标记为发货' : '已标记为未发货'); await renderAdminOrders(); }
+  else if (ok === 'skipped') { showToast('请先在「GitHub 同步」保存令牌，才能更新订单状态'); }
+  else { showToast('更新失败，请检查令牌权限'); }
+}
+
 function renderCartPage() {
   const grid = document.getElementById('cartGrid');
   const countEl = document.getElementById('cartCount');
@@ -3695,21 +3822,23 @@ function submitPurchase() {
   if (!hash) { showToast('请填写付款哈希'); return; }
   var prevImg = document.querySelector('#purchaseScreenshotPreview img');
   var screenshot = prevImg ? prevImg.src : null;
-  var orders = loadOrders();
-  orders.push({
+  var p = productData.find(function(x){ return x.id === currentPurchaseProductId; });
+  var order = {
+    id: 'ord_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     productId: currentPurchaseProductId,
+    productName: p ? p.name : ('商品#' + currentPurchaseProductId),
+    productPrice: p ? (p.price > 0 ? p.price + ' ' + (p.currency || 'USDT') : '免费/议价') : '',
     recipient: recipient,
     address: addr,
     hash: hash,
     screenshot: screenshot,
-    time: new Date().toISOString()
-  });
-  if (saveOrders(orders)) {
-    closePurchaseModal();
-    showToast('订单已提交，等待商家确认');
-  } else {
-    showToast('提交失败：本地存储已满');
-  }
+    time: new Date().toISOString(),
+    status: 'pending'
+  };
+  var local = loadOrders(); local.push(order); saveOrders(local);
+  pushOrderToGithub(order);
+  closePurchaseModal();
+  showToast('订单已提交，等待商家确认');
 }
 
 function renderAdminProductTable() {
@@ -4054,9 +4183,6 @@ function switchAdminTab(tab) {
   } else if (tab === 'platforms') {
     document.getElementById('adminTabPlatforms').classList.add('active');
     switchAdminPlatformTab('forex');
-  } else if (tab === 'tags') {
-    document.getElementById('adminTabTags').classList.add('active');
-    renderAdminTagTable();
   } else if (tab === 'ea') {
     document.getElementById('adminTabEA').classList.add('active');
     renderAdminItemTable('ea');
@@ -4072,6 +4198,9 @@ function switchAdminTab(tab) {
   } else if (tab === 'web3') {
     document.getElementById('adminTabWeb3').classList.add('active');
     renderAdminProductTable();
+  } else if (tab === 'orders') {
+    document.getElementById('adminTabOrders').classList.add('active');
+    renderAdminOrders();
   } else if (tab === 'github') {
     document.getElementById('adminTabGithub').classList.add('active');
   }
