@@ -2117,7 +2117,7 @@ body {
     <div class="modal-title">还需要什么商品？</div>
     <div class="modal-subtitle">请留言您需要的商品（名称 / 类型 / 用途等）</div>
     <div class="form-group">
-      <textarea class="suggestion-textarea" id="wishText" placeholder="例如：想要一个能自动识别背离的黄金 1 小时指标、某个 EA、或某个交易软件..."></textarea>
+      <textarea class="suggestion-textarea" id="wishText" placeholder=""></textarea>
     </div>
     <div class="admin-confirm-actions" style="margin-top:16px;">
       <button class="btn-cancel" onclick="closeWishModal()">取消</button>
@@ -2640,6 +2640,7 @@ var remote = await fetchGithubIssues();
   saveData(appData);
   if (ov) ov.style.display = "none";
   renderAll();
+  await initProductSync();
 }
 
 // ==================== TAG DATA ====================
@@ -3519,6 +3520,82 @@ function loadProducts() {
 function saveProducts() {
   try { localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(productData)); }
   catch(e) { showToast('存储失败：可能图片过大（localStorage 总容量有限）', 5000); }
+  // 后台同步到 GitHub（未配置令牌则静默跳过）
+  pushGithubProducts().then(function(res){
+    if (res === false) showToast('商品已存到本地，但同步到 GitHub 失败（图片可能过大或令牌无权限）', 5000);
+  });
+}
+
+// =========== GITHUB FILE SYNC FOR PRODUCTS ===========
+const PRODUCT_GITHUB_PATH = 'products.json';
+
+function b64encodeUtf8(str) { return btoa(unescape(encodeURIComponent(str))); }
+function b64decodeUtf8(b64) { return decodeURIComponent(escape(atob(b64.replace(/\s/g, '')))); }
+
+// 从 GitHub 读取商品（products.json）。无令牌返回 null；文件不存在返回空数组。
+async function fetchGithubProducts() {
+  try {
+    const token = getGithubToken();
+    if (!token || token === GITHUB_TOKEN_DEFAULT) return null;
+    const r = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + PRODUCT_GITHUB_PATH + '?t=' + Date.now(), {
+      headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json' }
+    });
+    if (r.status === 404) return { sha: null, products: [] };
+    if (!r.ok) throw new Error('商品同步读取失败：' + r.status);
+    const d = await r.json();
+    let products = [];
+    try { products = JSON.parse(b64decodeUtf8(d.content)); } catch(e) { products = []; }
+    if (!Array.isArray(products)) products = [];
+    return { sha: d.sha, products: products };
+  } catch(e) {
+    console.warn('从 GitHub 获取商品失败：', e);
+    return null;
+  }
+}
+
+// 把当前商品写入 GitHub。无令牌返回 'skipped'；成功 true；失败 false。
+async function pushGithubProducts() {
+  try {
+    const token = getGithubToken();
+    if (!token || token === GITHUB_TOKEN_DEFAULT) return 'skipped';
+    let sha = null;
+    try {
+      const cur = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + PRODUCT_GITHUB_PATH, {
+        headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json' }
+      });
+      if (cur.ok) sha = (await cur.json()).sha;
+    } catch(e) {}
+    const body = { message: 'update products', content: b64encodeUtf8(JSON.stringify(productData, null, 2)) };
+    if (sha) body.sha = sha;
+    const r = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + PRODUCT_GITHUB_PATH, {
+      method: 'PUT',
+      headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json', Accept: 'application/vnd.github.v3+json' },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) { console.warn('商品同步写入失败：', r.status); return false; }
+    return true;
+  } catch(e) {
+    console.warn('商品同步写入失败：', e);
+    return false;
+  }
+}
+
+// 初始化时拉取远程商品：
+//  - 远程有数据 => 服务器为准，采用远程；
+//  - 远程为空但本地有 => 把本地已有商品上传到 GitHub（让旧商品也上线）；
+//  - 均无 => 不动；无令牌(remote=null) => 仅用本地。
+async function initProductSync() {
+  const remote = await fetchGithubProducts();
+  if (!remote) return;
+  if (remote.products.length > 0) {
+    productData = remote.products;
+    productNextId = productData.length ? Math.max.apply(null, productData.map(function(p){ return p.id || 0; })) + 1 : 1;
+    try { localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(productData)); } catch(e) {}
+    if (typeof currentPage !== 'undefined' && currentPage === 'cart') renderCartPage();
+    renderAdminProductTable();
+  } else if (productData.length > 0) {
+    pushGithubProducts();
+  }
 }
 
 function renderCartPage() {
