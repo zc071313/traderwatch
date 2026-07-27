@@ -3713,6 +3713,7 @@ async function renderAdminOrders() {
     var actionBtn = o.status === 'shipped'
       ? '<button class="btn btn-sm btn-outline" onclick="setOrderStatus(\'' + o.id + '\',\'pending\')">标记未发</button>'
       : '<button class="btn btn-sm btn-primary" onclick="setOrderStatus(\'' + o.id + '\',\'shipped\')">标记发货</button>';
+    var delBtn = '<button class="btn btn-sm btn-outline" style="color:var(--danger);border-color:var(--danger);margin-left:6px;" onclick="deleteOrder(\'' + o.id + '\')">删除</button>';
     return '<tr>'
       + '<td style="font-size:0.72rem;white-space:nowrap;">' + formatTime(o.time) + '</td>'
       + '<td>' + escapeHtml(o.productName || ('商品#' + o.productId)) + '<br><span style="font-size:0.7rem;color:var(--text-muted);">' + escapeHtml(o.productPrice || '') + '</span></td>'
@@ -3720,7 +3721,7 @@ async function renderAdminOrders() {
       + '<td style="font-size:0.72rem;word-break:break-all;max-width:140px;">' + escapeHtml(o.hash || '') + '</td>'
       + '<td>' + shot + '</td>'
       + '<td style="text-align:center;">' + statusHtml + '</td>'
-      + '<td style="white-space:nowrap;">' + actionBtn + '</td>'
+      + '<td style="white-space:nowrap;">' + actionBtn + delBtn + '</td>'
       + '</tr>';
   }).join('');
 }
@@ -3735,6 +3736,19 @@ async function setOrderStatus(id, status) {
   if (ok === true) { showToast(status === 'shipped' ? '已标记为发货' : '已标记为未发货'); await renderAdminOrders(); }
   else if (ok === 'skipped') { showToast('请先在「GitHub 同步」保存令牌，才能更新订单状态'); }
   else { showToast('更新失败，请检查令牌权限'); }
+}
+async function deleteOrder(id) {
+  if (!confirm('确定删除该订单？删除后不可恢复。')) return;
+  var remote = await fetchGithubOrders();
+  var orders = (remote && remote.orders) ? remote.orders.slice() : loadOrders().slice();
+  var idx = orders.findIndex(function(o){ return o.id === id; });
+  if (idx === -1) { showToast('订单不存在'); return; }
+  orders.splice(idx, 1);
+  saveOrders(orders);
+  var ok = await pushGithubOrders(orders);
+  if (ok === true) { showToast('订单已删除'); await renderAdminOrders(); }
+  else if (ok === 'skipped') { showToast('请先在「GitHub 同步」保存令牌，才能删除订单'); }
+  else { showToast('删除失败，请检查令牌权限'); }
 }
 
 function renderCartPage() {
