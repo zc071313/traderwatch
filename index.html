@@ -2323,7 +2323,6 @@ var appData = { posts: [], nextId: 1 };
 async function initApp() {
   var ov = document.getElementById("loadingOverlay");
   if (ov) ov.style.display = "flex";
-    populateTagSelect();
   if (getGithubToken() === "YOUR_GITHUB_TOKEN_HERE") {
     var sn = document.getElementById("loadingSubtext");
     if (sn) sn.textContent = "公共模式 - 填入 GitHub 令牌可启用同步";
@@ -4109,6 +4108,7 @@ document.getElementById('itemModal').addEventListener('click', function(e) {
 // ==================== TAG MANAGEMENT (ADMIN) ====================
 function populateTagSelect() {
   const select = document.getElementById('postScamType');
+  if (!select) return;
   const val = select.value;
   select.innerHTML = '<option value="">请选择标签</option>' +
     tagData.map(t => `<option value="${t.key}">${t.name}</option>`).join('');
