@@ -1755,6 +1755,18 @@ body {
 .buy-addr-box .addr-text { flex:1; font-family: monospace; font-size:0.7rem; color: var(--text-secondary); word-break: break-all; line-height:1.4; }
 .purchase-screenshot-preview { margin-top:6px; }
 .purchase-screenshot-preview img { max-width:100%; max-height:160px; border-radius:6px; border:1px solid var(--border); }
+.chain-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(247,147,26,0.16);
+  color: #ffb347;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  vertical-align: middle;
+}
 
 .item-file-input {
   padding: 6px 8px !important;
@@ -2392,7 +2404,7 @@ body {
       <textarea class="suggestion-textarea" id="purchaseRecipient" placeholder="请填写收货人姓名、联系方式与收件地址"></textarea>
     </div>
     <div class="form-group">
-      <label class="form-label">收款合约地址（请向此地址付款）</label>
+      <label class="form-label">收款合约地址（请向此地址付款）<span id="purchaseChainTag" class="chain-tag"></span></label>
       <div class="buy-addr-box"><span class="addr-text" id="purchaseAddrText"></span><button class="copy-addr-btn" type="button" onclick="copyPurchaseAddress()">复制</button></div>
     </div>
     <div class="form-group">
@@ -3490,6 +3502,7 @@ function openPurchaseModal(id) {
   currentPurchaseProductId = id;
   document.getElementById('purchaseModalTitle').textContent = '购买：' + p.name;
   document.getElementById('purchaseAddrText').textContent = p.address || '（未设置收款地址）';
+  document.getElementById('purchaseChainTag').textContent = p.chain ? ' · ' + p.chain : '';
   document.getElementById('purchaseRecipient').value = '';
   document.getElementById('purchaseHash').value = '';
   document.getElementById('purchaseScreenshot').value = '';
