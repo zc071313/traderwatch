@@ -3356,7 +3356,12 @@ function enterAdmin() {
   document.getElementById('eaPage').classList.remove('open');
   document.getElementById('indicatorPage').classList.remove('open');
   document.getElementById('softwarePage').classList.remove('open');
+  document.getElementById('productPage').classList.remove('open');
+  document.getElementById('cartPage').classList.remove('open');
   document.getElementById('bottomNav').style.display = 'none';
+  // 进入管理中心时隐藏 K线训练大师（它是 main 的兄弟节点，隐藏 main 不会带走它），避免其盖在管理面板上方
+  var klineEl = document.getElementById('klineExpand');
+  if (klineEl) klineEl.style.display = 'none';
   document.getElementById('adminPanel').classList.add('open');
   switchAdminTab('posts');
   renderAdminPanel();
@@ -3391,6 +3396,14 @@ function exitAdmin() {
     document.querySelector('.main').style.display = 'none';
     document.getElementById('softwarePage').classList.add('open');
     renderItemPage('software');
+  } else if (currentPage === 'products') {
+    document.querySelector('.main').style.display = 'none';
+    document.getElementById('productPage').classList.add('open');
+    renderProductsPage();
+  } else if (currentPage === 'cart') {
+    document.querySelector('.main').style.display = 'none';
+    document.getElementById('cartPage').classList.add('open');
+    renderCartPage();
   }
   renderAll();
 }
