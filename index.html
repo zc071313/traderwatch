@@ -3284,10 +3284,11 @@ async function openSearchedMarketKline(query) {
   const btn = document.getElementById('marketSearchGo');
   if (btn) btn.disabled = true;
   try {
-    const res = await fetch('https://api.coingecko.com/api/v3/search?query=' + encodeURIComponent(q));
-    if (!res.ok) throw new Error('search ' + res.status);
-    const data = await res.json();
-    const coin = (data && data.coins && data.coins[0]) ? data.coins[0] : null;
+    let coin = peekCache('search:' + q);
+    if (!coin) {
+      const data = await fastFetch('https://api.coingecko.com/api/v3/search?query=' + encodeURIComponent(q), { cacheKey: 'search:' + q, ttl: 300000 });
+      coin = (data && data.coins && data.coins[0]) ? data.coins[0] : null;
+    }
     if (!coin) throw new Error('not found');
     await openCryptoKlineById(coin.id, coin.name, coin.symbol);
   } catch (e) {
@@ -3307,28 +3308,32 @@ async function openCryptoKlineById(id, name, symbol) {
   titleEl.innerHTML = name + '<small>' + symbol.toUpperCase() + 'USD · 行情</small>';
   overlay.classList.add('open');
   chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">加载中…</div>';
+  const cacheKey = 'kline:coin:' + id;
+  const cached = peekCache(cacheKey);
+  if (cached) renderCryptoKlineById(cached, name, symbol, priceEl, changeEl, chartEl);
   try {
-    const res = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=1');
-    if (!res.ok) throw new Error('crypto chart ' + res.status);
-    const data = await res.json();
+    const data = await fastFetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=1', { cacheKey: cacheKey, ttl: 30000 });
     const prices = (data && data.prices) ? data.prices : [];
     if (!prices.length) throw new Error('no crypto data');
-    const series = prices.map(p => ({ t: Math.floor(p[0] / 1000), p: p[1] }));
-    const candles = buildCandles(series);
-    if (candles.length < 1) throw new Error('no candles');
-    const last = candles[candles.length - 1].close;
-    const first = candles[0].open;
-    const changePct = ((last - first) / first) * 100;
-    priceEl.textContent = formatMarketPrice(last, null);
-    const cls = changePct >= 0 ? 'market-up' : 'market-down';
-    priceEl.className = 'market-kline-price ' + cls;
-    changeEl.className = 'market-kline-change ' + cls;
-    changeEl.textContent = (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '% (24h)';
-    chartEl.innerHTML = buildKlineSVG(candles);
+    renderCryptoKlineById(prices, name, symbol, priceEl, changeEl, chartEl);
   } catch (e) {
-    titleEl.innerHTML = name + '<small>' + symbol.toUpperCase() + 'USD · 行情</small>';
-    chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">' + name + ' 行情加载失败，请稍后重试</div>';
+    if (!cached) chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">' + name + ' 行情加载失败，请稍后重试</div>';
   }
+}
+
+function renderCryptoKlineById(prices, name, symbol, priceEl, changeEl, chartEl) {
+  const series = prices.map(function (p) { return { t: Math.floor(p[0] / 1000), p: p[1] }; });
+  const candles = buildCandles(series);
+  if (candles.length < 1) return;
+  const last = candles[candles.length - 1].close;
+  const first = candles[0].open;
+  const changePct = ((last - first) / first) * 100;
+  priceEl.textContent = formatMarketPrice(last, null);
+  const cls = changePct >= 0 ? 'market-up' : 'market-down';
+  priceEl.className = 'market-kline-price ' + cls;
+  changeEl.className = 'market-kline-change ' + cls;
+  changeEl.textContent = (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '% (24h)';
+  chartEl.innerHTML = buildKlineSVG(candles);
 }
 
 // 各品种 K 线元数据：xau 走 xaus，btc/eth 走 CoinGecko
@@ -3353,28 +3358,75 @@ function closeMarketKline() {
   document.getElementById('marketKlineOverlay').classList.remove('open');
 }
 
+// ====== 行情获取优化：带超时 + TTL 缓存的 fetch ======
+const _fetchCache = new Map();
+const FETCH_TIMEOUT = 9000;   // 单个请求最长等待，超时即失败快速返回，不再无限转圈
+const CACHE_TTL = 30000;      // 行情缓存 30s，30s 内重复打开行情图/刷新直接命中缓存
+
+async function fastFetch(url, opts) {
+  opts = opts || {};
+  const cacheKey = opts.cacheKey || null;
+  const ttl = opts.ttl || CACHE_TTL;
+  const timeout = opts.timeout || FETCH_TIMEOUT;
+  const now = Date.now();
+  if (cacheKey) {
+    const c = _fetchCache.get(cacheKey);
+    if (c && (now - c.ts) < c.ttl) return c.data;   // 命中缓存，瞬间返回
+  }
+  const ctrl = new AbortController();
+  const timer = setTimeout(function () { ctrl.abort(); }, timeout);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (cacheKey) _fetchCache.set(cacheKey, { ts: now, ttl: ttl, data: data });
+    return data;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function peekCache(key) {
+  const c = _fetchCache.get(key);
+  if (c && (Date.now() - c.ts) < c.ttl) return c.data;
+  return null;
+}
+
+function setCache(key, data, ttl) {
+  _fetchCache.set(key, { ts: Date.now(), ttl: ttl || CACHE_TTL, data: data });
+}
+
 // ====== 现货黄金：xaus 24h 真实数据 ======
 async function fetchXauKline(symbol) {
   const priceEl = document.getElementById('marketKlinePrice');
   const changeEl = document.getElementById('marketKlineChange');
   const chartEl = document.getElementById('marketKlineChart');
+  const cacheKey = 'kline:xau';
+  const cached = peekCache(cacheKey);
+  if (cached) renderXauKline(cached, symbol, priceEl, changeEl, chartEl);   // 缓存命中即时出图
   try {
-    const spotRes = await fetch('https://xaus.com/api/v1/spot?compact=1');
-    const spot = await spotRes.json();
+    const [spot, intra] = await Promise.all([   // spot 与 intraday 并行拉取
+      fastFetch('https://xaus.com/api/v1/spot?compact=1', { cacheKey: 'xau:spot', ttl: 15000 }),
+      fastFetch('https://xaus.com/api/v1/intraday?symbol=xau&hours=24', { cacheKey: 'xau:intraday', ttl: 30000 })
+    ]);
     const price = spot && spot.xau ? spot.xau.price : null;
-    const intraRes = await fetch('https://xaus.com/api/v1/intraday?symbol=xau&hours=24');
-    const intra = await intraRes.json();
-    const pts = (intra && intra.points) ? intra.points : [];
+    const pts = intra && intra.points ? intra.points : [];
     if (!price || pts.length < 2) throw new Error('no gold data');
-    const candles = buildCandles(pts);
-    if (candles.length < 1) throw new Error('no candles');
-    const first = candles[0].open;
-    const changePct = ((price - first) / first) * 100;
-    applyKlineQuote(priceEl, changeEl, price, changePct, symbol);
-    chartEl.innerHTML = buildKlineSVG(candles);
+    const payload = { price: price, pts: pts };
+    setCache(cacheKey, payload, 30000);
+    renderXauKline(payload, symbol, priceEl, changeEl, chartEl);
   } catch (e) {
-    chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">黄金行情加载失败，请稍后重试</div>';
+    if (!cached) chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">黄金行情加载失败，请稍后重试</div>';
   }
+}
+
+function renderXauKline(payload, symbol, priceEl, changeEl, chartEl) {
+  const candles = buildCandles(payload.pts);
+  if (candles.length < 1) return;
+  const first = candles[0].open;
+  const changePct = ((payload.price - first) / first) * 100;
+  applyKlineQuote(priceEl, changeEl, payload.price, changePct, symbol);
+  chartEl.innerHTML = buildKlineSVG(candles);
 }
 
 // ====== 加密货币：CoinGecko 24h 真实数据聚合蜡烛 ======
@@ -3383,23 +3435,29 @@ async function fetchCryptoKline(symbol) {
   const changeEl = document.getElementById('marketKlineChange');
   const chartEl = document.getElementById('marketKlineChart');
   const meta = MARKET_KLINE_META[symbol];
+  const cacheKey = 'kline:' + meta.coingeckoId;
+  const cached = peekCache(cacheKey);
+  if (cached) renderCryptoKline(cached, meta, priceEl, changeEl, chartEl);
   try {
-    const res = await fetch('https://api.coingecko.com/api/v3/coins/' + meta.coingeckoId + '/market_chart?vs_currency=usd&days=1');
-    if (!res.ok) throw new Error('crypto chart ' + res.status);
-    const data = await res.json();
+    const data = await fastFetch('https://api.coingecko.com/api/v3/coins/' + meta.coingeckoId + '/market_chart?vs_currency=usd&days=1', { cacheKey: cacheKey, ttl: 30000 });
     const prices = (data && data.prices) ? data.prices : [];
     if (!prices.length) throw new Error('no crypto data');
-    const series = prices.map(p => ({ t: Math.floor(p[0] / 1000), p: p[1] }));
-    const candles = buildCandles(series);
-    if (candles.length < 1) throw new Error('no candles');
-    const last = candles[candles.length - 1].close;
-    const first = candles[0].open;
-    const changePct = ((last - first) / first) * 100;
-    applyKlineQuote(priceEl, changeEl, last, changePct, symbol);
-    chartEl.innerHTML = buildKlineSVG(candles);
+    setCache(cacheKey, prices, 30000);
+    renderCryptoKline(prices, meta, priceEl, changeEl, chartEl);
   } catch (e) {
-    chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">' + meta.title + '行情加载失败，请稍后重试</div>';
+    if (!cached) chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">' + meta.title + '行情加载失败，请稍后重试</div>';
   }
+}
+
+function renderCryptoKline(prices, meta, priceEl, changeEl, chartEl) {
+  const series = prices.map(function (p) { return { t: Math.floor(p[0] / 1000), p: p[1] }; });
+  const candles = buildCandles(series);
+  if (candles.length < 1) throw new Error('no candles');
+  const last = candles[candles.length - 1].close;
+  const first = candles[0].open;
+  const changePct = ((last - first) / first) * 100;
+  applyKlineQuote(priceEl, changeEl, last, changePct, meta.coingeckoId === 'bitcoin' ? 'btc' : 'eth');
+  chartEl.innerHTML = buildKlineSVG(candles);
 }
 
 function applyKlineQuote(priceEl, changeEl, price, changePct, symbol) {
@@ -3529,22 +3587,45 @@ function updateMarketRow(id, price, changePct, sparkline) {
 }
 
 async function fetchMarketData() {
-  try { await fetchGoldMarket(); } catch(e) { console.log('gold market fetch error', e); }
-  try { await fetchCryptoMarket(); } catch(e) { console.log('crypto market fetch error', e); }
+  paintMarketFromCache();   // 先用上一次缓存即时刷新界面，避免白屏等待
+  await Promise.all([
+    fetchGoldMarket().catch(function (e) { console.log('gold market fetch error', e); }),
+    fetchCryptoMarket().catch(function (e) { console.log('crypto market fetch error', e); })
+  ]);
   const timeEl = document.getElementById('marketUpdateTime');
   if (timeEl) timeEl.textContent = '更新于 ' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
 }
 
+// 用缓存里的旧数据先把行情行画出来（即时），随后后台静默刷新
+function paintMarketFromCache() {
+  const spot = peekCache('xau:spot');
+  const intra = peekCache('xau:intraday');
+  if (spot && intra) {
+    const price = spot.xau ? spot.xau.price : null;
+    const pts = intra.points || [];
+    const prices = pts.map(function (p) { return p.p; });
+    if (price && prices.length) {
+      const first = prices[0], last = prices[prices.length - 1];
+      updateMarketRow('xau', price, ((last - first) / first) * 100, prices);
+    }
+  }
+  const list = peekCache('crypto:markets');
+  if (list && list.forEach) list.forEach(function (coin) {
+    const id = coin.id === 'bitcoin' ? 'btc' : coin.id === 'ethereum' ? 'eth' : null;
+    if (!id) return;
+    const sparkline = coin.sparkline_in_7d && coin.sparkline_in_7d.price ? coin.sparkline_in_7d.price : [];
+    updateMarketRow(id, coin.current_price, coin.price_change_percentage_24h || 0, sparkline);
+  });
+}
+
 async function fetchGoldMarket() {
-  const spotRes = await fetch('https://xaus.com/api/v1/spot?compact=1');
-  if (!spotRes.ok) throw new Error('gold spot ' + spotRes.status);
-  const spot = await spotRes.json();
+  const [spot, intra] = await Promise.all([   // spot 与 intraday 并行
+    fastFetch('https://xaus.com/api/v1/spot?compact=1', { cacheKey: 'xau:spot', ttl: 15000 }),
+    fastFetch('https://xaus.com/api/v1/intraday?symbol=xau&hours=24', { cacheKey: 'xau:intraday', ttl: 30000 })
+  ]);
   const price = spot && spot.xau && spot.xau.price;
-  const intraRes = await fetch('https://xaus.com/api/v1/intraday?symbol=xau&hours=24');
-  if (!intraRes.ok) throw new Error('gold intraday ' + intraRes.status);
-  const intra = await intraRes.json();
   const pts = intra && intra.points ? intra.points : [];
-  const prices = pts.map(p => p.p);
+  const prices = pts.map(function (p) { return p.p; });
   if (!price || !prices.length) return;
   const first = prices[0];
   const last = prices[prices.length - 1];
@@ -3553,10 +3634,8 @@ async function fetchGoldMarket() {
 }
 
 async function fetchCryptoMarket() {
-  const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum&sparkline=true');
-  if (!res.ok) throw new Error('crypto ' + res.status);
-  const list = await res.json();
-  list.forEach(coin => {
+  const list = await fastFetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum&sparkline=true', { cacheKey: 'crypto:markets', ttl: 30000 });
+  list.forEach(function (coin) {
     const id = coin.id === 'bitcoin' ? 'btc' : coin.id === 'ethereum' ? 'eth' : null;
     if (!id) return;
     const price = coin.current_price;
