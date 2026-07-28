@@ -72,6 +72,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
 }
 
 .logo-icon {
@@ -1377,6 +1378,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   transition: border-color 0.2s;
+  cursor: pointer;
 }
 .market-row:hover { border-color: var(--accent); }
 .market-row.is-hidden { display: none; }
@@ -1579,7 +1581,7 @@ body {
   bottom: 70px;
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   gap: 6px;
@@ -2151,7 +2153,7 @@ body {
 <!-- Header -->
 <header class="header">
   <div class="header-inner">
-    <div class="logo">
+    <div class="logo" onclick="switchPage('home')">
       <div class="logo-icon">TW</div>
       <div class="logo-text">
         <h1>TraderWatch</h1>
@@ -3117,7 +3119,7 @@ function renderHomeMarket() {
 
 function renderMarketRowsHTML() {
   return MARKET_SYMBOLS.map(s => `
-    <div class="market-row" data-symbol="${s.id}" data-name="${s.name}" data-code="${s.code}">
+    <div class="market-row" data-symbol="${s.id}" data-name="${s.name}" data-code="${s.code}" onclick="openMarketKline('${s.id}')">
       <div class="market-icon ${s.iconClass}">${s.iconText}</div>
       <div class="market-info">
         <div class="market-name">${s.name}</div>
@@ -3139,6 +3141,11 @@ function filterMarketRows(query) {
     const name = (row.getAttribute('data-name') || '').toLowerCase();
     row.classList.toggle('is-hidden', !!(q && !code.includes(q) && !name.includes(q)));
   });
+}
+
+// 点击行情行（如现货黄金）进入 K 线图（K线训练大师）
+function openMarketKline(symbol) {
+  openKlineExpand();
 }
 
 function formatMarketPrice(price, id) {
@@ -4371,6 +4378,8 @@ function switchPage(page) {
     document.getElementById('bottomNav').style.display = '';
     renderProductsPage();
   }
+  // 悬浮留言胶囊：仅 Web3 购物（商品）页面显示，其它页面隐藏
+  updateWishPromptVisibility();
 }
 
 // ==================== PLATFORM DATA ====================
@@ -5532,12 +5541,19 @@ function openKlineExpand() {
 
 function closeKlineExpand() {
   document.getElementById('klineExpand').style.display = 'none';
-  // Restore main content and floating wish prompt
+  // Restore main content
   var main = document.querySelector('.main');
   if (main) main.style.display = '';
-  var wish = document.getElementById('floatingWishPrompt');
-  if (wish) wish.style.display = '';
+  // Restore floating wish prompt according to current page (only on products page)
+  updateWishPromptVisibility();
   if (currentPage === 'home') renderAll();
+}
+
+// 悬浮留言胶囊显隐：仅 Web3 购物（商品）页面显示，其它页面隐藏
+function updateWishPromptVisibility() {
+  var wish = document.getElementById('floatingWishPrompt');
+  if (!wish) return;
+  wish.style.display = (currentPage === 'products') ? 'flex' : 'none';
 }
 
 
