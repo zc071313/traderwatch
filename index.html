@@ -1345,7 +1345,7 @@ body {
 }
 .market-header h2 { font-size: 1.15rem; font-weight: 700; }
 .market-update { font-size: 0.7rem; color: var(--text-muted); }
-.market-search-wrap { position: relative; margin-bottom: 14px; }
+.market-search-wrap { position: relative; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
 .market-search-wrap svg {
   position: absolute;
   left: 12px;
@@ -1357,7 +1357,8 @@ body {
   pointer-events: none;
 }
 .market-search {
-  width: 100%;
+  flex: 1;
+  width: auto;
   padding: 10px 12px 10px 36px;
   background: var(--bg-input);
   border: 1px solid var(--border);
@@ -1368,6 +1369,20 @@ body {
   transition: border 0.2s;
 }
 .market-search:focus { border-color: var(--accent); }
+.market-search-go {
+  padding: 10px 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.market-search-go:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.market-search-go:disabled { opacity: 0.6; cursor: wait; transform: none; }
 .market-list { display: flex; flex-direction: column; gap: 8px; }
 .market-row {
   display: flex;
@@ -1420,8 +1435,8 @@ body {
   font-family: var(--font-mono);
 }
 .market-price-change { font-size: 0.7rem; }
-.market-up { color: var(--red); }
-.market-down { color: var(--green); }
+.market-up { color: var(--green); }
+.market-down { color: var(--red); }
 
 .platform-page-header {
   display: flex;
@@ -1674,8 +1689,8 @@ body {
 .market-kline-chart { padding: 8px 10px 16px; }
 .market-kline-chart svg { width: 100%; height: auto; display: block; }
 .market-kline-axis { font-size: 10px; fill: var(--text-muted); }
-.market-up { color: var(--red); }
-.market-down { color: var(--green); }
+.market-up { color: var(--green); }
+.market-down { color: var(--red); }
 
 .type-tag {
   display: inline-block;
@@ -3203,7 +3218,8 @@ function renderHomeMarket() {
       </div>
       <div class="market-search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" class="market-search" id="marketSearch" placeholder="搜索品种（如 XAUUSD / BTC / ETH）" oninput="filterMarketRows(this.value)">
+        <input type="text" class="market-search" id="marketSearch" placeholder="搜索品种（如 XAUUSD / BTC / ETH / ADA）" oninput="filterMarketRows(this.value)" onkeydown="if(event.key==='Enter')doMarketSearch()">
+        <button class="market-search-go" id="marketSearchGo" onclick="doMarketSearch()">搜索行情图</button>
       </div>
       <div class="market-list" id="marketList">
         ${renderMarketRowsHTML()}
@@ -3241,6 +3257,78 @@ function filterMarketRows(query) {
 // 点击行情行：黄金 -> 黄金行情 K 线图；其它 -> K线训练大师
 function openMarketKline(symbol) {
   openMarketKlineChart(symbol);
+}
+
+// 在首页搜索框点击「搜索行情图」/按 Enter：搜索任意品种并打开行情 K 线
+function doMarketSearch() {
+  const input = document.getElementById('marketSearch');
+  if (!input) return;
+  const q = input.value.trim();
+  if (!q) return;
+  openSearchedMarketKline(q);
+}
+
+async function openSearchedMarketKline(query) {
+  const q = (query || '').trim().toLowerCase();
+  if (!q) return;
+  // 先匹配固定品种（黄金/BTC/ETH）
+  const fixed = MARKET_SYMBOLS.find(s => s.id === q || s.code.toLowerCase() === q || s.name.toLowerCase().includes(q));
+  if (fixed) { openMarketKline(fixed.id); return; }
+  // 否则走 CoinGecko 搜索
+  const overlay = document.getElementById('marketKlineOverlay');
+  const titleEl = document.getElementById('marketKlineTitle');
+  const chartEl = document.getElementById('marketKlineChart');
+  titleEl.innerHTML = '搜索中<small>' + q.toUpperCase() + ' · 行情</small>';
+  overlay.classList.add('open');
+  chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">搜索并加载行情…</div>';
+  const btn = document.getElementById('marketSearchGo');
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/search?query=' + encodeURIComponent(q));
+    if (!res.ok) throw new Error('search ' + res.status);
+    const data = await res.json();
+    const coin = (data && data.coins && data.coins[0]) ? data.coins[0] : null;
+    if (!coin) throw new Error('not found');
+    await openCryptoKlineById(coin.id, coin.name, coin.symbol);
+  } catch (e) {
+    titleEl.innerHTML = '未找到该品种<small>' + q.toUpperCase() + '</small>';
+    chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">未找到 "' + q.toUpperCase() + '" 的行情数据，请尝试其它品种（如 BTC / ETH / ADA）</div>';
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function openCryptoKlineById(id, name, symbol) {
+  const overlay = document.getElementById('marketKlineOverlay');
+  const titleEl = document.getElementById('marketKlineTitle');
+  const priceEl = document.getElementById('marketKlinePrice');
+  const changeEl = document.getElementById('marketKlineChange');
+  const chartEl = document.getElementById('marketKlineChart');
+  titleEl.innerHTML = name + '<small>' + symbol.toUpperCase() + 'USD · 行情</small>';
+  overlay.classList.add('open');
+  chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">加载中…</div>';
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=1');
+    if (!res.ok) throw new Error('crypto chart ' + res.status);
+    const data = await res.json();
+    const prices = (data && data.prices) ? data.prices : [];
+    if (!prices.length) throw new Error('no crypto data');
+    const series = prices.map(p => ({ t: Math.floor(p[0] / 1000), p: p[1] }));
+    const candles = buildCandles(series);
+    if (candles.length < 1) throw new Error('no candles');
+    const last = candles[candles.length - 1].close;
+    const first = candles[0].open;
+    const changePct = ((last - first) / first) * 100;
+    priceEl.textContent = formatMarketPrice(last, null);
+    const cls = changePct >= 0 ? 'market-up' : 'market-down';
+    priceEl.className = 'market-kline-price ' + cls;
+    changeEl.className = 'market-kline-change ' + cls;
+    changeEl.textContent = (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '% (24h)';
+    chartEl.innerHTML = buildKlineSVG(candles);
+  } catch (e) {
+    titleEl.innerHTML = name + '<small>' + symbol.toUpperCase() + 'USD · 行情</small>';
+    chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">' + name + ' 行情加载失败，请稍后重试</div>';
+  }
 }
 
 // 各品种 K 线元数据：xau 走 xaus，btc/eth 走 CoinGecko
@@ -3369,7 +3457,7 @@ function buildKlineSVG(candles) {
   candles.forEach((c, i) => {
     const cx = padL + slot * i + slot / 2;
     const isUp = c.close >= c.open;
-    const color = isUp ? 'var(--red)' : 'var(--green)';
+    const color = isUp ? 'var(--green)' : 'var(--red)';
     const yOpen = yOf(c.open), yClose = yOf(c.close);
     const yHigh = yOf(c.high), yLow = yOf(c.low);
     const top = Math.min(yOpen, yClose);
@@ -3391,14 +3479,18 @@ function buildKlineSVG(candles) {
 
 function formatAxisPrice(v) {
   if (v >= 1000) return (v / 1000).toFixed(1) + 'k';
-  return v.toFixed(0);
+  if (v >= 1) return v.toFixed(0);
+  if (v >= 0.01) return v.toFixed(2);
+  return v.toFixed(4);
 }
 
 function formatMarketPrice(price, id) {
   if (price == null || isNaN(price)) return '--';
   if (id === 'xau') return price.toFixed(2);
   if (price >= 1000) return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return price.toFixed(2);
+  if (price >= 1) return price.toFixed(2);
+  if (price >= 0.01) return price.toFixed(4);
+  return price.toFixed(6);
 }
 
 function buildSparklineSVG(data, isUp) {
