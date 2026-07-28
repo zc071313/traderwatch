@@ -5200,7 +5200,7 @@ function openKlineExpand() {
     iframe.src = 'https://zc071313.github.io/k-line-trainer/';
   }
   // Fullscreen mode: hide all page content below header
-  var ids = ['statsBar', 'filterTags', 'postList'];
+  var ids = ['statsBar', 'filterTags', 'postList', 'floatingWishPrompt'];
   ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
   var classes = ['.search-bar', '.suggestion-link-wrap'];
   classes.forEach(function(sel) { var el = document.querySelector(sel); if (el) el.style.display = 'none'; });
@@ -5211,7 +5211,7 @@ function openKlineExpand() {
 function closeKlineExpand() {
   document.getElementById('klineExpand').style.display = 'none';
   // Restore all hidden elements
-  var ids = ['statsBar', 'filterTags', 'postList'];
+  var ids = ['statsBar', 'filterTags', 'postList', 'floatingWishPrompt'];
   ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = ''; });
   var classes = ['.search-bar', '.suggestion-link-wrap'];
   classes.forEach(function(sel) { var el = document.querySelector(sel); if (el) el.style.display = ''; });
