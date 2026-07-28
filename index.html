@@ -1605,6 +1605,78 @@ body {
 .floating-wish-text {
   font-weight: 500;
 }
+
+/* 商品页底部内联留言入口 */
+.product-wish-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 18px auto 8px;
+  padding: 14px 18px;
+  max-width: 420px;
+  background: rgba(192, 57, 43, 0.95);
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.product-wish-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+}
+
+/* 黄金行情 K 线弹窗 */
+.gold-kline-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+}
+.gold-kline-overlay.open { display: flex; }
+.gold-kline-modal {
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+}
+.gold-kline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.gold-kline-title { font-size: 1rem; font-weight: 600; }
+.gold-kline-title small { color: var(--text-muted); font-weight: 400; margin-left: 6px; }
+.gold-kline-close {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 1.3rem; cursor: pointer; line-height: 1;
+}
+.gold-kline-quote {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 12px 16px 4px;
+}
+.gold-kline-price { font-size: 1.5rem; font-weight: 700; }
+.gold-kline-change { font-size: 0.9rem; font-weight: 600; }
+.gold-kline-chart { padding: 8px 10px 16px; }
+.gold-kline-chart svg { width: 100%; height: auto; display: block; }
+.gold-kline-axis { font-size: 10px; fill: var(--text-muted); }
+.market-up { color: var(--red); }
+.market-down { color: var(--green); }
+
 .type-tag {
   display: inline-block;
   font-size: 0.72rem;
@@ -2207,6 +2279,9 @@ body {
     <span class="platform-count" id="productCount">0 个商品</span>
   </div>
   <div class="download-grid" id="productGrid"></div>
+  <div class="product-wish-cta" onclick="openWishModal()">
+    <span>💬 还需要什么商品？点此留言需要的商品</span>
+  </div>
 </div>
 
 <!-- EA Page -->
@@ -2328,6 +2403,23 @@ body {
 <!-- Image Preview -->
 <div class="img-preview-overlay" id="imgPreview" style="display:none;" onclick="closeImgPreview()">
   <img id="imgPreviewSrc" src="" alt="预览">
+</div>
+
+<!-- Gold Market K-line Modal -->
+<div class="gold-kline-overlay" id="goldKlineOverlay" onclick="if(event.target===this)closeGoldKline()">
+  <div class="gold-kline-modal">
+    <div class="gold-kline-head">
+      <div class="gold-kline-title">现货黄金<small>XAUUSD · 行情</small></div>
+      <button class="gold-kline-close" onclick="closeGoldKline()">✕</button>
+    </div>
+    <div class="gold-kline-quote">
+      <span class="gold-kline-price" id="goldKlinePrice">--</span>
+      <span class="gold-kline-change" id="goldKlineChange">--</span>
+    </div>
+    <div class="gold-kline-chart" id="goldKlineChart">
+      <div style="padding:24px;text-align:center;color:var(--text-muted);">加载中…</div>
+    </div>
+  </div>
 </div>
 
 <!-- Password Modal -->
@@ -3143,9 +3235,120 @@ function filterMarketRows(query) {
   });
 }
 
-// 点击行情行（如现货黄金）进入 K 线图（K线训练大师）
+// 点击行情行：黄金 -> 黄金行情 K 线图；其它 -> K线训练大师
 function openMarketKline(symbol) {
-  openKlineExpand();
+  if (symbol === 'xau') {
+    openGoldKline();
+  } else {
+    openKlineExpand();
+  }
+}
+
+// ==================== 黄金行情 K 线图 ====================
+function openGoldKline() {
+  const overlay = document.getElementById('goldKlineOverlay');
+  overlay.classList.add('open');
+  const chartEl = document.getElementById('goldKlineChart');
+  chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">加载中…</div>';
+  fetchGoldKline();
+}
+
+function closeGoldKline() {
+  const overlay = document.getElementById('goldKlineOverlay');
+  overlay.classList.remove('open');
+}
+
+async function fetchGoldKline() {
+  const priceEl = document.getElementById('goldKlinePrice');
+  const changeEl = document.getElementById('goldKlineChange');
+  const chartEl = document.getElementById('goldKlineChart');
+  try {
+    const spotRes = await fetch('https://xaus.com/api/v1/spot?compact=1');
+    const spot = await spotRes.json();
+    const price = spot && spot.xau ? spot.xau.price : null;
+    const intraRes = await fetch('https://xaus.com/api/v1/intraday?symbol=xau&hours=24');
+    const intra = await intraRes.json();
+    const pts = (intra && intra.points) ? intra.points : [];
+    if (!price || pts.length < 2) throw new Error('no gold data');
+    const candles = buildGoldCandles(pts);
+    if (candles.length < 1) throw new Error('no candles');
+    const first = candles[0].open;
+    const changePct = ((price - first) / first) * 100;
+    priceEl.textContent = price.toFixed(2);
+    priceEl.className = 'gold-kline-price ' + (changePct >= 0 ? 'market-up' : 'market-down');
+    changeEl.className = 'gold-kline-change ' + (changePct >= 0 ? 'market-up' : 'market-down');
+    changeEl.textContent = (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '% (24h)';
+    chartEl.innerHTML = buildGoldKlineSVG(candles);
+  } catch (e) {
+    chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">黄金行情加载失败，请稍后重试</div>';
+  }
+}
+
+// 把 24h  intraday 价格序列聚合成 1 小时蜡烛
+function buildGoldCandles(points) {
+  if (!points || points.length < 2) return [];
+  const t0 = points[0].t;
+  const HOUR = 3600;
+  const buckets = {};
+  points.forEach(p => {
+    const idx = Math.floor((p.t - t0) / HOUR);
+    if (!buckets[idx]) buckets[idx] = [];
+    buckets[idx].push(p.p);
+  });
+  const candles = [];
+  Object.keys(buckets).map(Number).sort((a, b) => a - b).forEach(idx => {
+    const arr = buckets[idx];
+    candles.push({
+      open: arr[0],
+      high: Math.max.apply(null, arr),
+      low: Math.min.apply(null, arr),
+      close: arr[arr.length - 1]
+    });
+  });
+  return candles;
+}
+
+function buildGoldKlineSVG(candles) {
+  const W = 680, H = 320, padL = 8, padR = 8, padT = 10, padB = 22;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+  let hi = -Infinity, lo = Infinity;
+  candles.forEach(c => { if (c.high > hi) hi = c.high; if (c.low < lo) lo = lo > c.low ? c.low : lo; });
+  if (!isFinite(hi) || !isFinite(lo)) { hi = 1; lo = 0; }
+  const range = (hi - lo) || 1;
+  const n = candles.length;
+  const slot = plotW / n;
+  const cw = Math.max(2, slot * 0.6);
+  const yOf = v => padT + (1 - (v - lo) / range) * plotH;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+  // 网格横线
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (plotH * i / 4);
+    const val = hi - (range * i / 4);
+    svg += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1"/>`;
+    svg += `<text class="gold-kline-axis" x="${W - padR}" y="${(y + 3).toFixed(1)}" text-anchor="end">${val.toFixed(0)}</text>`;
+  }
+  candles.forEach((c, i) => {
+    const cx = padL + slot * i + slot / 2;
+    const isUp = c.close >= c.open;
+    const color = isUp ? 'var(--red)' : 'var(--green)';
+    const yOpen = yOf(c.open), yClose = yOf(c.close);
+    const yHigh = yOf(c.high), yLow = yOf(c.low);
+    const top = Math.min(yOpen, yClose);
+    const bodyH = Math.max(1, Math.abs(yClose - yOpen));
+    // 影线
+    svg += `<line x1="${cx.toFixed(1)}" y1="${yHigh.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${yLow.toFixed(1)}" stroke="${color}" stroke-width="1"/>`;
+    // 实体
+    svg += `<rect x="${(cx - cw / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${cw.toFixed(1)}" height="${bodyH.toFixed(1)}" fill="${color}"/>`;
+  });
+  // 时间轴标签（每 6 根标一次）
+  for (let i = 0; i < n; i += 6) {
+    const cx = padL + slot * i + slot / 2;
+    const hrsAgo = n - 1 - i;
+    svg += `<text class="gold-kline-axis" x="${cx.toFixed(1)}" y="${(H - 6).toFixed(1)}" text-anchor="middle">${hrsAgo}h</text>`;
+  }
+  svg += `</svg>`;
+  return svg;
 }
 
 function formatMarketPrice(price, id) {
@@ -5549,11 +5752,10 @@ function closeKlineExpand() {
   if (currentPage === 'home') renderAll();
 }
 
-// 悬浮留言胶囊显隐：仅 Web3 购物（商品）页面显示，其它页面隐藏
+// 悬浮留言胶囊已改为商品页内联入口，这里统一隐藏全局悬浮胶囊
 function updateWishPromptVisibility() {
   var wish = document.getElementById('floatingWishPrompt');
-  if (!wish) return;
-  wish.style.display = (currentPage === 'products') ? 'flex' : 'none';
+  if (wish) wish.style.display = 'none';
 }
 
 
