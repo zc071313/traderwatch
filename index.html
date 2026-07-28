@@ -1630,7 +1630,7 @@ body {
 }
 
 /* 黄金行情 K 线弹窗 */
-.gold-kline-overlay {
+.market-kline-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.55);
@@ -1640,8 +1640,8 @@ body {
   z-index: 200;
   padding: 16px;
 }
-.gold-kline-overlay.open { display: flex; }
-.gold-kline-modal {
+.market-kline-overlay.open { display: flex; }
+.market-kline-modal {
   width: 100%;
   max-width: 720px;
   max-height: 90vh;
@@ -1652,28 +1652,28 @@ body {
   display: flex;
   flex-direction: column;
 }
-.gold-kline-head {
+.market-kline-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
 }
-.gold-kline-title { font-size: 1rem; font-weight: 600; }
-.gold-kline-title small { color: var(--text-muted); font-weight: 400; margin-left: 6px; }
-.gold-kline-close {
+.market-kline-title { font-size: 1rem; font-weight: 600; }
+.market-kline-title small { color: var(--text-muted); font-weight: 400; margin-left: 6px; }
+.market-kline-close {
   background: none; border: none; color: var(--text-muted);
   font-size: 1.3rem; cursor: pointer; line-height: 1;
 }
-.gold-kline-quote {
+.market-kline-quote {
   display: flex; align-items: baseline; gap: 10px;
   padding: 12px 16px 4px;
 }
-.gold-kline-price { font-size: 1.5rem; font-weight: 700; }
-.gold-kline-change { font-size: 0.9rem; font-weight: 600; }
-.gold-kline-chart { padding: 8px 10px 16px; }
-.gold-kline-chart svg { width: 100%; height: auto; display: block; }
-.gold-kline-axis { font-size: 10px; fill: var(--text-muted); }
+.market-kline-price { font-size: 1.5rem; font-weight: 700; }
+.market-kline-change { font-size: 0.9rem; font-weight: 600; }
+.market-kline-chart { padding: 8px 10px 16px; }
+.market-kline-chart svg { width: 100%; height: auto; display: block; }
+.market-kline-axis { font-size: 10px; fill: var(--text-muted); }
 .market-up { color: var(--red); }
 .market-down { color: var(--green); }
 
@@ -2406,17 +2406,17 @@ body {
 </div>
 
 <!-- Gold Market K-line Modal -->
-<div class="gold-kline-overlay" id="goldKlineOverlay" onclick="if(event.target===this)closeGoldKline()">
-  <div class="gold-kline-modal">
-    <div class="gold-kline-head">
-      <div class="gold-kline-title">现货黄金<small>XAUUSD · 行情</small></div>
-      <button class="gold-kline-close" onclick="closeGoldKline()">✕</button>
+<div class="market-kline-overlay" id="marketKlineOverlay" onclick="if(event.target===this)closeMarketKline()">
+  <div class="market-kline-modal">
+    <div class="market-kline-head">
+      <div class="market-kline-title" id="marketKlineTitle">行情<small>·</small></div>
+      <button class="market-kline-close" onclick="closeMarketKline()">✕</button>
     </div>
-    <div class="gold-kline-quote">
-      <span class="gold-kline-price" id="goldKlinePrice">--</span>
-      <span class="gold-kline-change" id="goldKlineChange">--</span>
+    <div class="market-kline-quote">
+      <span class="market-kline-price" id="marketKlinePrice">--</span>
+      <span class="market-kline-change" id="marketKlineChange">--</span>
     </div>
-    <div class="gold-kline-chart" id="goldKlineChart">
+    <div class="market-kline-chart" id="marketKlineChart">
       <div style="padding:24px;text-align:center;color:var(--text-muted);">加载中…</div>
     </div>
   </div>
@@ -3237,31 +3237,36 @@ function filterMarketRows(query) {
 
 // 点击行情行：黄金 -> 黄金行情 K 线图；其它 -> K线训练大师
 function openMarketKline(symbol) {
-  if (symbol === 'xau') {
-    openGoldKline();
-  } else {
-    openKlineExpand();
-  }
+  openMarketKlineChart(symbol);
 }
 
-// ==================== 黄金行情 K 线图 ====================
-function openGoldKline() {
-  const overlay = document.getElementById('goldKlineOverlay');
+// 各品种 K 线元数据：xau 走 xaus，btc/eth 走 CoinGecko
+const MARKET_KLINE_META = {
+  xau: { title: '现货黄金', code: 'XAUUSD', coingeckoId: null, fetch: fetchXauKline },
+  btc: { title: '比特币', code: 'BTCUSD', coingeckoId: 'bitcoin', fetch: fetchCryptoKline },
+  eth: { title: '以太坊', code: 'ETHUSD', coingeckoId: 'ethereum', fetch: fetchCryptoKline }
+};
+
+function openMarketKlineChart(symbol) {
+  const meta = MARKET_KLINE_META[symbol];
+  if (!meta) { openKlineExpand(); return; }
+  const overlay = document.getElementById('marketKlineOverlay');
+  document.getElementById('marketKlineTitle').innerHTML = meta.title + '<small>' + meta.code + ' · 行情</small>';
   overlay.classList.add('open');
-  const chartEl = document.getElementById('goldKlineChart');
+  const chartEl = document.getElementById('marketKlineChart');
   chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">加载中…</div>';
-  fetchGoldKline();
+  meta.fetch(symbol);
 }
 
-function closeGoldKline() {
-  const overlay = document.getElementById('goldKlineOverlay');
-  overlay.classList.remove('open');
+function closeMarketKline() {
+  document.getElementById('marketKlineOverlay').classList.remove('open');
 }
 
-async function fetchGoldKline() {
-  const priceEl = document.getElementById('goldKlinePrice');
-  const changeEl = document.getElementById('goldKlineChange');
-  const chartEl = document.getElementById('goldKlineChart');
+// ====== 现货黄金：xaus 24h 真实数据 ======
+async function fetchXauKline(symbol) {
+  const priceEl = document.getElementById('marketKlinePrice');
+  const changeEl = document.getElementById('marketKlineChange');
+  const chartEl = document.getElementById('marketKlineChart');
   try {
     const spotRes = await fetch('https://xaus.com/api/v1/spot?compact=1');
     const spot = await spotRes.json();
@@ -3270,27 +3275,57 @@ async function fetchGoldKline() {
     const intra = await intraRes.json();
     const pts = (intra && intra.points) ? intra.points : [];
     if (!price || pts.length < 2) throw new Error('no gold data');
-    const candles = buildGoldCandles(pts);
+    const candles = buildCandles(pts);
     if (candles.length < 1) throw new Error('no candles');
     const first = candles[0].open;
     const changePct = ((price - first) / first) * 100;
-    priceEl.textContent = price.toFixed(2);
-    priceEl.className = 'gold-kline-price ' + (changePct >= 0 ? 'market-up' : 'market-down');
-    changeEl.className = 'gold-kline-change ' + (changePct >= 0 ? 'market-up' : 'market-down');
-    changeEl.textContent = (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '% (24h)';
-    chartEl.innerHTML = buildGoldKlineSVG(candles);
+    applyKlineQuote(priceEl, changeEl, price, changePct, symbol);
+    chartEl.innerHTML = buildKlineSVG(candles);
   } catch (e) {
     chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">黄金行情加载失败，请稍后重试</div>';
   }
 }
 
-// 把 24h  intraday 价格序列聚合成 1 小时蜡烛
-function buildGoldCandles(points) {
-  if (!points || points.length < 2) return [];
-  const t0 = points[0].t;
+// ====== 加密货币：CoinGecko 24h 真实数据聚合蜡烛 ======
+async function fetchCryptoKline(symbol) {
+  const priceEl = document.getElementById('marketKlinePrice');
+  const changeEl = document.getElementById('marketKlineChange');
+  const chartEl = document.getElementById('marketKlineChart');
+  const meta = MARKET_KLINE_META[symbol];
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/coins/' + meta.coingeckoId + '/market_chart?vs_currency=usd&days=1');
+    if (!res.ok) throw new Error('crypto chart ' + res.status);
+    const data = await res.json();
+    const prices = (data && data.prices) ? data.prices : [];
+    if (!prices.length) throw new Error('no crypto data');
+    const series = prices.map(p => ({ t: Math.floor(p[0] / 1000), p: p[1] }));
+    const candles = buildCandles(series);
+    if (candles.length < 1) throw new Error('no candles');
+    const last = candles[candles.length - 1].close;
+    const first = candles[0].open;
+    const changePct = ((last - first) / first) * 100;
+    applyKlineQuote(priceEl, changeEl, last, changePct, symbol);
+    chartEl.innerHTML = buildKlineSVG(candles);
+  } catch (e) {
+    chartEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);">' + meta.title + '行情加载失败，请稍后重试</div>';
+  }
+}
+
+function applyKlineQuote(priceEl, changeEl, price, changePct, symbol) {
+  priceEl.textContent = formatMarketPrice(price, symbol);
+  const cls = changePct >= 0 ? 'market-up' : 'market-down';
+  priceEl.className = 'market-kline-price ' + cls;
+  changeEl.className = 'market-kline-change ' + cls;
+  changeEl.textContent = (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '% (24h)';
+}
+
+// 把 24h 价格序列（[{t, p}]）聚合成 1 小时蜡烛
+function buildCandles(series) {
+  if (!series || series.length < 2) return [];
+  const t0 = series[0].t;
   const HOUR = 3600;
   const buckets = {};
-  points.forEach(p => {
+  series.forEach(p => {
     const idx = Math.floor((p.t - t0) / HOUR);
     if (!buckets[idx]) buckets[idx] = [];
     buckets[idx].push(p.p);
@@ -3308,12 +3343,12 @@ function buildGoldCandles(points) {
   return candles;
 }
 
-function buildGoldKlineSVG(candles) {
+function buildKlineSVG(candles) {
   const W = 680, H = 320, padL = 8, padR = 8, padT = 10, padB = 22;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
   let hi = -Infinity, lo = Infinity;
-  candles.forEach(c => { if (c.high > hi) hi = c.high; if (c.low < lo) lo = lo > c.low ? c.low : lo; });
+  candles.forEach(c => { if (c.high > hi) hi = c.high; if (c.low < lo) lo = c.low; });
   if (!isFinite(hi) || !isFinite(lo)) { hi = 1; lo = 0; }
   const range = (hi - lo) || 1;
   const n = candles.length;
@@ -3326,7 +3361,7 @@ function buildGoldKlineSVG(candles) {
     const y = padT + (plotH * i / 4);
     const val = hi - (range * i / 4);
     svg += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1"/>`;
-    svg += `<text class="gold-kline-axis" x="${W - padR}" y="${(y + 3).toFixed(1)}" text-anchor="end">${val.toFixed(0)}</text>`;
+    svg += `<text class="market-kline-axis" x="${W - padR}" y="${(y + 3).toFixed(1)}" text-anchor="end">${formatAxisPrice(val)}</text>`;
   }
   candles.forEach((c, i) => {
     const cx = padL + slot * i + slot / 2;
@@ -3345,10 +3380,15 @@ function buildGoldKlineSVG(candles) {
   for (let i = 0; i < n; i += 6) {
     const cx = padL + slot * i + slot / 2;
     const hrsAgo = n - 1 - i;
-    svg += `<text class="gold-kline-axis" x="${cx.toFixed(1)}" y="${(H - 6).toFixed(1)}" text-anchor="middle">${hrsAgo}h</text>`;
+    svg += `<text class="market-kline-axis" x="${cx.toFixed(1)}" y="${(H - 6).toFixed(1)}" text-anchor="middle">${hrsAgo}h</text>`;
   }
   svg += `</svg>`;
   return svg;
+}
+
+function formatAxisPrice(v) {
+  if (v >= 1000) return (v / 1000).toFixed(1) + 'k';
+  return v.toFixed(0);
 }
 
 function formatMarketPrice(price, id) {
