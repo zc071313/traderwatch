@@ -1310,6 +1310,117 @@ body {
 .product-page { display: none; }
 .product-page.open { display: block; }
 
+/* ==================== HOME MARKET ==================== */
+.kline-entry-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, var(--accent), #8b1a1a);
+  color: #fff;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(192,57,43,0.25);
+}
+.kline-entry-title { font-weight: 700; font-size: 1rem; }
+.kline-entry-desc { font-size: 0.75rem; opacity: 0.9; }
+.kline-entry-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.market-section {}
+.market-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.market-header h2 { font-size: 1.15rem; font-weight: 700; }
+.market-update { font-size: 0.7rem; color: var(--text-muted); }
+.market-search-wrap { position: relative; margin-bottom: 14px; }
+.market-search-wrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.market-search {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border 0.2s;
+}
+.market-search:focus { border-color: var(--accent); }
+.market-list { display: flex; flex-direction: column; gap: 8px; }
+.market-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.2s;
+}
+.market-row:hover { border-color: var(--accent); }
+.market-row.is-hidden { display: none; }
+.market-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+.market-icon-gold { background: linear-gradient(135deg, #c9a84c, #a8842c); }
+.market-icon-btc { background: linear-gradient(135deg, #f7931a, #d47b0f); }
+.market-icon-eth { background: linear-gradient(135deg, #627eea, #3c5fc9); }
+.market-info { flex: 1; min-width: 0; }
+.market-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.market-code { font-size: 0.75rem; color: var(--text-muted); }
+.market-chart {
+  width: 90px;
+  height: 38px;
+  flex-shrink: 0;
+}
+.market-chart svg { display: block; width: 100%; height: 100%; }
+.market-price { text-align: right; flex-shrink: 0; min-width: 80px; }
+.market-price-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.market-price-change { font-size: 0.7rem; }
+.market-up { color: var(--red); }
+.market-down { color: var(--green); }
+
 .platform-page-header {
   display: flex;
   align-items: center;
@@ -2065,7 +2176,7 @@ body {
 <div class="kline-expand" id="klineExpand">
   <div class="kline-expand-bar">
     <span class="kline-expand-title">K线训练大师</span>
-    <button class="kline-expand-close" onclick="closeKlineToProducts()" title="关闭">✕</button>
+    <button class="kline-expand-close" onclick="closeKlineExpand()" title="关闭">✕</button>
   </div>
   <iframe id="klineExpandIframe" src="" title="K线训练器" loading="lazy"></iframe>
 </div>
@@ -2968,7 +3079,146 @@ function setFilter(tag, el) {
 }
 
 function renderAll() {
-  if (currentPage === 'home') openKlineExpand();
+  if (currentPage === 'home') renderHomeMarket();
+}
+
+const MARKET_SYMBOLS = [
+  { id: 'xau', code: 'XAUUSD', name: '现货黄金', iconClass: 'market-icon-gold', iconText: 'AU' },
+  { id: 'btc', code: 'BTCUSD', name: '比特币/美元', iconClass: 'market-icon-btc', iconText: 'BTC' },
+  { id: 'eth', code: 'ETHUSD', name: '以太坊/美元', iconClass: 'market-icon-eth', iconText: 'ETH' }
+];
+
+function renderHomeMarket() {
+  const main = document.querySelector('.main');
+  if (!main) return;
+  main.innerHTML = `
+    <div class="market-section">
+      <div class="kline-entry-card" onclick="openKlineExpand()">
+        <div>
+          <div class="kline-entry-title">K线训练大师</div>
+          <div class="kline-entry-desc">点击这里开始 K 线模拟训练</div>
+        </div>
+        <button class="kline-entry-btn">进入训练</button>
+      </div>
+      <div class="market-header">
+        <h2>市场行情</h2>
+        <span class="market-update" id="marketUpdateTime">更新中...</span>
+      </div>
+      <div class="market-search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="market-search" id="marketSearch" placeholder="搜索品种（如 XAUUSD / BTC / ETH）" oninput="filterMarketRows(this.value)">
+      </div>
+      <div class="market-list" id="marketList">
+        ${renderMarketRowsHTML()}
+      </div>
+    </div>`;
+  fetchMarketData();
+}
+
+function renderMarketRowsHTML() {
+  return MARKET_SYMBOLS.map(s => `
+    <div class="market-row" data-symbol="${s.id}" data-name="${s.name}" data-code="${s.code}">
+      <div class="market-icon ${s.iconClass}">${s.iconText}</div>
+      <div class="market-info">
+        <div class="market-name">${s.name}</div>
+        <div class="market-code">${s.code}</div>
+      </div>
+      <div class="market-chart" id="marketChart-${s.id}"></div>
+      <div class="market-price">
+        <div class="market-price-value" id="marketPrice-${s.id}">--</div>
+        <div class="market-price-change" id="marketChange-${s.id}">--</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterMarketRows(query) {
+  const q = (query || '').toLowerCase().trim();
+  document.querySelectorAll('.market-row').forEach(row => {
+    const code = (row.getAttribute('data-code') || '').toLowerCase();
+    const name = (row.getAttribute('data-name') || '').toLowerCase();
+    row.classList.toggle('is-hidden', !!(q && !code.includes(q) && !name.includes(q)));
+  });
+}
+
+function formatMarketPrice(price, id) {
+  if (price == null || isNaN(price)) return '--';
+  if (id === 'xau') return price.toFixed(2);
+  if (price >= 1000) return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return price.toFixed(2);
+}
+
+function buildSparklineSVG(data, isUp) {
+  if (!data || data.length < 2) return '';
+  const w = 90, h = 38, pad = 2;
+  const min = Math.min(...data), max = Math.max(...data);
+  const range = max - min || 1;
+  const points = data.map((v, i) => {
+    const x = pad + (i / (data.length - 1)) * (w - pad * 2);
+    const y = h - pad - ((v - min) / range) * (h - pad * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const pathD = 'M ' + points[0] + ' L ' + points.slice(1).join(' L ');
+  const lastX = points[points.length - 1].split(',')[0];
+  const firstX = points[0].split(',')[0];
+  const areaD = pathD + ' L ' + lastX + ',' + h + ' L ' + firstX + ',' + h + ' Z';
+  const color = isUp ? 'var(--red)' : 'var(--green)';
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${areaD}" fill="${color}" opacity="0.12"/><path d="${pathD}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function updateMarketRow(id, price, changePct, sparkline) {
+  const priceEl = document.getElementById('marketPrice-' + id);
+  const changeEl = document.getElementById('marketChange-' + id);
+  const chartEl = document.getElementById('marketChart-' + id);
+  if (!priceEl || !changeEl) return;
+  priceEl.textContent = formatMarketPrice(price, id);
+  const isUp = changePct >= 0;
+  const cls = isUp ? 'market-up' : 'market-down';
+  priceEl.className = 'market-price-value ' + cls;
+  changeEl.className = 'market-price-change ' + cls;
+  const sign = isUp ? '+' : '';
+  changeEl.textContent = (isNaN(changePct) ? '--' : sign + changePct.toFixed(2) + '%');
+  if (chartEl && sparkline && sparkline.length > 1) {
+    chartEl.innerHTML = buildSparklineSVG(sparkline, isUp);
+  }
+}
+
+async function fetchMarketData() {
+  try { await fetchGoldMarket(); } catch(e) { console.log('gold market fetch error', e); }
+  try { await fetchCryptoMarket(); } catch(e) { console.log('crypto market fetch error', e); }
+  const timeEl = document.getElementById('marketUpdateTime');
+  if (timeEl) timeEl.textContent = '更新于 ' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+}
+
+async function fetchGoldMarket() {
+  const spotRes = await fetch('https://xaus.com/api/v1/spot?compact=1');
+  if (!spotRes.ok) throw new Error('gold spot ' + spotRes.status);
+  const spot = await spotRes.json();
+  const price = spot && spot.xau && spot.xau.price;
+  const intraRes = await fetch('https://xaus.com/api/v1/intraday?symbol=xau&hours=24');
+  if (!intraRes.ok) throw new Error('gold intraday ' + intraRes.status);
+  const intra = await intraRes.json();
+  const pts = intra && intra.points ? intra.points : [];
+  const prices = pts.map(p => p.p);
+  if (!price || !prices.length) return;
+  const first = prices[0];
+  const last = prices[prices.length - 1];
+  const changePct = ((last - first) / first) * 100;
+  updateMarketRow('xau', price, changePct, prices);
+}
+
+async function fetchCryptoMarket() {
+  const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum&sparkline=true');
+  if (!res.ok) throw new Error('crypto ' + res.status);
+  const list = await res.json();
+  list.forEach(coin => {
+    const id = coin.id === 'bitcoin' ? 'btc' : coin.id === 'ethereum' ? 'eth' : null;
+    if (!id) return;
+    const price = coin.current_price;
+    const changePct = coin.price_change_percentage_24h || 0;
+    const sparkline = coin.sparkline_in_7d && coin.sparkline_in_7d.price ? coin.sparkline_in_7d.price : [];
+    updateMarketRow(id, price, changePct, sparkline);
+  });
 }
 
 function renderStatsAndFilters() {
@@ -3841,12 +4091,6 @@ async function renderProductsPage() {
   } catch(e) {}
 }
 
-// X 掉训练大师 -> 隐藏训练大师并跳转到独立商品列表页
-function closeKlineToProducts() {
-  document.getElementById('klineExpand').style.display = 'none';
-  switchPage('products');
-}
-
 const ORDER_STORAGE_KEY = 'traderwatch_orders';
 let currentPurchaseProductId = null;
 
@@ -4089,7 +4333,7 @@ function switchPage(page) {
     header.style.display = '';
     main.style.display = '';
     document.getElementById('bottomNav').style.display = '';
-    openKlineExpand();
+    renderAll();
   } else if (page === 'platforms') {
     header.style.display = '';
     main.style.display = 'none';
@@ -5277,22 +5521,23 @@ function openKlineExpand() {
   if (!iframe.src || iframe.src === window.location.href || iframe.src.endsWith('/')) {
     iframe.src = 'https://zc071313.github.io/k-line-trainer/';
   }
-  // Fullscreen mode: hide all page content below header
-  var ids = ['statsBar', 'filterTags', 'postList', 'floatingWishPrompt'];
-  ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
-  var classes = ['.search-bar', '.suggestion-link-wrap'];
-  classes.forEach(function(sel) { var el = document.querySelector(sel); if (el) el.style.display = 'none'; });
+  // Hide main content and floating wish prompt (they are siblings of klineExpand)
+  var main = document.querySelector('.main');
+  if (main) main.style.display = 'none';
+  var wish = document.getElementById('floatingWishPrompt');
+  if (wish) wish.style.display = 'none';
   // Scroll to expand area
   setTimeout(function() { area.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
 }
 
 function closeKlineExpand() {
   document.getElementById('klineExpand').style.display = 'none';
-  // Restore all hidden elements
-  var ids = ['statsBar', 'filterTags', 'postList', 'floatingWishPrompt'];
-  ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = ''; });
-  var classes = ['.search-bar', '.suggestion-link-wrap'];
-  classes.forEach(function(sel) { var el = document.querySelector(sel); if (el) el.style.display = ''; });
+  // Restore main content and floating wish prompt
+  var main = document.querySelector('.main');
+  if (main) main.style.display = '';
+  var wish = document.getElementById('floatingWishPrompt');
+  if (wish) wish.style.display = '';
+  if (currentPage === 'home') renderAll();
 }
 
 
