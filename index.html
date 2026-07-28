@@ -1307,6 +1307,8 @@ body {
 .platform-page.open {
   display: block;
 }
+.product-page { display: none; }
+.product-page.open { display: block; }
 
 .platform-page-header {
   display: flex;
@@ -2063,7 +2065,7 @@ body {
 <div class="kline-expand" id="klineExpand">
   <div class="kline-expand-bar">
     <span class="kline-expand-title">K线训练大师</span>
-    <button class="kline-expand-close" onclick="closeKlineExpand()" title="关闭">✕</button>
+    <button class="kline-expand-close" onclick="closeKlineToProducts()" title="关闭">✕</button>
   </div>
   <iframe id="klineExpandIframe" src="" title="K线训练器" loading="lazy"></iframe>
 </div>
@@ -2083,6 +2085,15 @@ body {
   </div>
   <div class="platform-grid" id="platformGrid"></div>
   <div class="platform-grid" id="cryptoGrid" style="display:none;"></div>
+</div>
+
+<!-- Product Page (独立商品列表页) -->
+<div class="product-page" id="productPage">
+  <div class="platform-page-header">
+    <h2>商品</h2>
+    <span class="platform-count" id="productCount">0 个商品</span>
+  </div>
+  <div class="download-grid" id="productGrid"></div>
 </div>
 
 <!-- EA Page -->
@@ -2188,6 +2199,10 @@ body {
   <button class="bottom-nav-item" data-page="platforms" onclick="switchPage('platforms')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
     平台
+  </button>
+  <button class="bottom-nav-item" data-page="products" onclick="switchPage('products')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+    商品
   </button>
 </nav>
 
@@ -3776,6 +3791,49 @@ function renderCartPage() {
   }).join('');
 }
 
+// 独立商品列表页：先渲染本地商品，再异步拉取 GitHub 最新（确保手机等其它设备可见）
+async function renderProductsPage() {
+  const grid = document.getElementById('productGrid');
+  const countEl = document.getElementById('productCount');
+  if (!grid) return;
+  const paint = function() {
+    countEl.textContent = productData.length + ' 个商品';
+    if (productData.length === 0) {
+      grid.innerHTML = '<div class="download-empty"><p>商品即将上架</p></div>';
+      return;
+    }
+    grid.innerHTML = productData.map(function(p) {
+      const imgHtml = p.image
+        ? '<img class="product-card-img" src="' + escapeHtml(p.image) + '" alt="' + escapeHtml(p.name) + '" onerror="this.style.display=\'none\'">'
+        : '<span class="no-img">无图片</span>';
+      const priceTxt = (p.price && p.price > 0) ? (escapeHtml(String(p.price)) + ' ' + escapeHtml(p.currency || 'USDT')) : '免费 / 议价';
+      return '<div class="product-card">'
+        + '<div class="product-card-imgwrap">' + imgHtml + '</div>'
+        + '<div class="product-card-name">' + escapeHtml(p.name) + '</div>'
+        + (p.description ? '<div class="product-card-desc">' + escapeHtml(p.description) + '</div>' : '')
+        + '<div class="product-card-meta"><span class="product-card-price">' + priceTxt + '</span><span class="product-card-chain">' + escapeHtml(p.chain || '') + '</span></div>'
+        + '<button class="buy-btn" onclick="openPurchaseModal(' + p.id + ')">购买</button>'
+        + '</div>';
+    }).join('');
+  };
+  paint();
+  try {
+    const remote = await fetchGithubProducts();
+    if (remote && remote.products && remote.products.length) {
+      productData = remote.products;
+      productNextId = productData.length ? Math.max.apply(null, productData.map(function(p){ return p.id || 0; })) + 1 : 1;
+      try { localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(productData)); } catch(e) {}
+      paint();
+    }
+  } catch(e) {}
+}
+
+// X 掉训练大师 -> 隐藏训练大师并跳转到独立商品列表页
+function closeKlineToProducts() {
+  document.getElementById('klineExpand').style.display = 'none';
+  switchPage('products');
+}
+
 const ORDER_STORAGE_KEY = 'traderwatch_orders';
 let currentPurchaseProductId = null;
 
@@ -4012,6 +4070,7 @@ function switchPage(page) {
   document.getElementById('indicatorPage').classList.remove('open');
   document.getElementById('softwarePage').classList.remove('open');
   document.getElementById('cartPage').classList.remove('open');
+  document.getElementById('productPage').classList.remove('open');
 
   if (page === 'home') {
     header.style.display = '';
@@ -4048,6 +4107,12 @@ function switchPage(page) {
     document.getElementById('cartPage').classList.add('open');
     document.getElementById('bottomNav').style.display = '';
     renderCartPage();
+  } else if (page === 'products') {
+    header.style.display = '';
+    main.style.display = 'none';
+    document.getElementById('productPage').classList.add('open');
+    document.getElementById('bottomNav').style.display = '';
+    renderProductsPage();
   }
 }
 
