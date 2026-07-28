@@ -169,26 +169,6 @@ body {
   padding: 16px;
 }
 
-/* K-line entry card on home feed */
-.kline-entry {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: linear-gradient(135deg, #1c2129, #161b22);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 14px 16px;
-  margin-bottom: 16px;
-  cursor: pointer;
-  transition: border 0.2s;
-}
-.kline-entry:hover { border-color: var(--accent); }
-.kline-entry-icon { font-size: 24px; line-height: 1; }
-.kline-entry-text { flex: 1; min-width: 0; }
-.kline-entry-title { font-weight: 600; color: var(--text-primary); font-size: 0.95rem; }
-.kline-entry-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
-.kline-entry-arrow { font-size: 22px; color: var(--text-muted); }
-
 /* Search & Filter Bar */
 .search-bar {
   display: flex;
@@ -2965,40 +2945,6 @@ function publishPost() {
 // ==================== RENDER// ==================== RENDER ====================
 let currentFilter = 'all';
 
-// Build the home feed skeleton once. These nodes (statsBar/filterTags/postList/...)
-// were never present in the static HTML, so the feed had to be constructed dynamically.
-function ensureHomeLayout() {
-  if (document.getElementById('postList')) return;
-  const main = document.querySelector('.main');
-  if (!main) return;
-  main.innerHTML = `
-    <div class="kline-entry" id="klineEntry" onclick="openKlineExpand(true)">
-      <div class="kline-entry-icon">📈</div>
-      <div class="kline-entry-text">
-        <div class="kline-entry-title">K线训练大师</div>
-        <div class="kline-entry-sub">点击进入实盘 K 线训练</div>
-      </div>
-      <span class="kline-entry-arrow">›</span>
-    </div>
-    <div class="search-bar">
-      <div class="search-input-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input id="searchInput" class="search-input" type="text" placeholder="搜索曝光帖 / 平台 / 关键词" oninput="onSearchInput()">
-      </div>
-    </div>
-    <div class="stats-bar" id="statsBar"></div>
-    <div class="filter-tags" id="filterTags"></div>
-    <div class="post-list" id="postList"></div>
-    <div class="suggestion-link-wrap" id="suggestionLinkWrap">
-      <button class="btn btn-primary" onclick="openPublishModal()">＋ 我要曝光</button>
-    </div>
-  `;
-}
-
-function onSearchInput() {
-  if (currentPage === 'home') renderPosts();
-}
-
 function setFilter(tag, el) {
   currentFilter = tag;
   document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
@@ -3007,12 +2953,7 @@ function setFilter(tag, el) {
 }
 
 function renderAll() {
-  if (currentPage === 'home') {
-    ensureHomeLayout();
-    renderStatsAndFilters();
-    renderPosts();
-    openKlineExpand();
-  }
+  if (currentPage === 'home') openKlineExpand();
 }
 
 function renderStatsAndFilters() {
@@ -5251,10 +5192,7 @@ function deleteSuggestion(id) {
 }
 
 // ==================== K-LINE EXPAND ====================
-let klineClosedByUser = false;
-function openKlineExpand(force) {
-  if (!force && klineClosedByUser) return; // stay on the feed after the user closed it
-  klineClosedByUser = false;
+function openKlineExpand() {
   const area = document.getElementById('klineExpand');
   const iframe = document.getElementById('klineExpandIframe');
   area.style.display = 'block';
@@ -5262,7 +5200,7 @@ function openKlineExpand(force) {
     iframe.src = 'https://zc071313.github.io/k-line-trainer/';
   }
   // Fullscreen mode: hide all page content below header
-  var ids = ['statsBar', 'filterTags', 'postList', 'floatingWishPrompt', 'klineEntry'];
+  var ids = ['statsBar', 'filterTags', 'postList', 'floatingWishPrompt'];
   ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
   var classes = ['.search-bar', '.suggestion-link-wrap'];
   classes.forEach(function(sel) { var el = document.querySelector(sel); if (el) el.style.display = 'none'; });
@@ -5271,10 +5209,9 @@ function openKlineExpand(force) {
 }
 
 function closeKlineExpand() {
-  klineClosedByUser = true;
   document.getElementById('klineExpand').style.display = 'none';
   // Restore all hidden elements
-  var ids = ['statsBar', 'filterTags', 'postList', 'floatingWishPrompt', 'klineEntry'];
+  var ids = ['statsBar', 'filterTags', 'postList', 'floatingWishPrompt'];
   ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = ''; });
   var classes = ['.search-bar', '.suggestion-link-wrap'];
   classes.forEach(function(sel) { var el = document.querySelector(sel); if (el) el.style.display = ''; });
